@@ -1,7 +1,8 @@
 {
-  "project_info": {
+"project_info": {
     "project_number": "698296234742",
     "project_id": "veonaryland",
+    "firebase_url": "https://veonaryland-default-rtdb.firebaseio.com", 
     "storage_bucket": "veonaryland.firebasestorage.app"
   },
   "client": [
