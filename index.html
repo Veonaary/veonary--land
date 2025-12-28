@@ -10,6 +10,56 @@
 
 <body style="margin: 0; padding: 0;">
 
+  <!-- 🔥 FIREBASE STUB - PREVENTS ALL FIREBASE ERRORS -->
+  <script>
+    if (typeof firebase === 'undefined') {
+      window.firebase = {
+        database: function() {
+          return {
+            ref: function(path) {
+              console.log('[Firebase Stub] Reference:', path);
+              return {
+                push: function() { return { key: 'stub_key' }; },
+                set: function(data) { 
+                  console.log('[Firebase Stub] Set:', data);
+                  return Promise.resolve(); 
+                },
+                update: function(data) { 
+                  console.log('[Firebase Stub] Update:', data);
+                  return Promise.resolve(); 
+                },
+                child: function(childPath) {
+                  console.log('[Firebase Stub] Child:', childPath);
+                  return this;
+                },
+                remove: function() { return Promise.resolve(); }
+              };
+            }
+          };
+        },
+        initializeApp: function(config) {
+          console.log('[Firebase Stub] Init:', config);
+          return {};
+        },
+        analytics: function() { 
+          return { 
+            logEvent: function(name, params) {
+              console.log('[Firebase Stub] Event:', name, params);
+            } 
+          }; 
+        }
+      };
+      
+      window.LogToFirebaseJS = function(path, jsonPayload) {
+        console.log('[Firebase Stub] LogToFirebaseJS');
+        console.log('  Path:', path);
+        console.log('  Data:', jsonPayload);
+      };
+      
+      console.log('[Firebase] Stub created ✓');
+    }
+  </script>
+
   <div id="unity-container" class="unity-desktop">
     <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
     
@@ -43,7 +93,6 @@
     var warningBanner = document.querySelector("#unity-warning");
 
 
-    // Unity warning banner handler
     function unityShowBanner(msg, type) {
       function updateBannerVisibility() {
         warningBanner.style.display = warningBanner.children.length ? "block" : "none";
@@ -66,7 +115,6 @@
       updateBannerVisibility();
     }
 
-    // Unity build configuration
     var buildUrl = "Build";
     var loaderUrl = buildUrl + "/veonary--land.loader.js";
     
@@ -81,7 +129,6 @@
       showBanner: unityShowBanner
     };
 
-    // Mobile detection and setup
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
       var meta = document.createElement("meta");
       meta.name = "viewport";
@@ -95,10 +142,8 @@
     }
 
 
-    // Show loading bar
     loadingBar.style.display = "block";
 
-    // Load Unity
     var script = document.createElement("script");
     script.src = loaderUrl;
     
@@ -107,14 +152,10 @@
         progressBarFull.style.width = (100 * progress) + "%";
       }).then(function(unityInstance) {
         
-        // ⭐ REQUIRED: Store Unity instance globally for voice chat
         window.unityInstance = unityInstance;
-        
-        // Hide loading bar
         loadingBar.style.display = "none";
         
         
-        // Fullscreen button
         fullscreenButton.onclick = function() {
           unityInstance.SetFullscreen(1);
         };
@@ -127,7 +168,7 @@
     };
     
     script.onerror = function() {
-      alert("Failed to load Unity build files. Please check your Build folder.");
+      alert("Failed to load Unity build files.");
     };
     
     document.body.appendChild(script);
@@ -141,33 +182,27 @@
       
       voiceBtn.addEventListener("click", function() {
         
-        // Check if Unity is ready
         if (!window.unityInstance) {
-          console.warn("[Voice] Unity is not ready yet");
-          alert("Please wait for the game to load completely!");
+          console.warn("[Voice] Unity not ready");
+          alert("Please wait for the game to load!");
           return;
         }
         
         if (isVoiceEnabled) {
-          console.log("[Voice] Voice already enabled");
+          console.log("[Voice] Already enabled");
           return;
         }
         
-        // 🔓 CRITICAL: Unlock browser audio context (must happen on user interaction)
         var unlockAudio = document.createElement("audio");
         unlockAudio.muted = true;
         unlockAudio.play().then(function() {
-          console.log("[Voice] Audio context unlocked");
+          console.log("[Voice] Audio unlocked");
         }).catch(function(err) {
           console.warn("[Voice] Audio unlock failed:", err);
         });
         
-        // Call Unity method to start voice chat
         try {
-          window.unityInstance.SendMessage(
-            "VoiceManager",
-            "StartVoice"
-          );
+          window.unityInstance.SendMessage("VoiceManager", "StartVoice");
           
           isVoiceEnabled = true;
           voiceBtn.innerText = "✅ Voice Enabled";
@@ -177,15 +212,14 @@
           voiceBtn.disabled = true;
           voiceBtn.style.cursor = "default";
           
-          console.log("[Voice] Voice chat enabled successfully");
+          console.log("[Voice] Enabled successfully");
           
         } catch (err) {
-          console.error("[Voice] Failed to start voice:", err);
-          alert("Failed to enable voice chat. Check console for details.");
+          console.error("[Voice] Failed:", err);
+          alert("Failed to enable voice chat");
         }
       });
       
-      // Hover effect for button
       voiceBtn.addEventListener("mouseenter", function() {
         if (!isVoiceEnabled) {
           voiceBtn.style.background = "#f0f0f0";
