@@ -54,6 +54,7 @@
   }
 </script>
 
+<!-- ================= UNITY CONTAINER ================= -->
 <div id="unity-container" class="unity-desktop">
   <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
 
@@ -73,7 +74,7 @@
   </div>
 </div>
 
-<!-- ================= VOICE BUTTON (UNCHANGED UI, FIXED LOGIC) ================= -->
+<!-- ================= VOICE BUTTON ================= -->
 <button id="voiceBtn"
 style="
 position:fixed;
@@ -141,7 +142,7 @@ cursor:pointer;
   document.body.appendChild(script);
 </script>
 
-<!-- ================= VOICE BUTTON HANDLER (FIXED ORDER) ================= -->
+<!-- ================= VOICE BUTTON HANDLER ================= -->
 <script>
   (function () {
     const btn = document.getElementById("voiceBtn");
@@ -165,6 +166,30 @@ cursor:pointer;
       console.log("[Voice] Enabled via user gesture");
     };
   })();
+</script>
+
+<!-- ================= EXPORTING JS FUNCTIONS ================= -->
+<script>
+// Add the voice-related functions to Unity's exported functions
+// Module['JS_AddPeer'] = function(peerActor) {
+//   // Your function logic here
+// };
+
+Module['JS_InitVoice'] = function(actor) {
+  // Your function logic here
+};
+
+Module['JS_RemovePeer'] = function(peerActor) {
+  // Your function logic here
+};
+
+Module['JS_StartVoice'] = function() {
+  // Your function logic here
+};
+
+Module['JS_VoiceSignal'] = function(ptr) {
+  // Your function logic here
+};
 </script>
 
 </body>
