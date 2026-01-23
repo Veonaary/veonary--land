@@ -1,196 +1,144 @@
 <!DOCTYPE html>
 <html lang="en-us">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>Unity WebGL Player | WebProject</title>
-  <link rel="shortcut icon" href="TemplateData/favicon.ico">
-  <link rel="stylesheet" href="TemplateData/style.css">
-</head>
-
-<body style="margin: 0; padding: 0;">
-
-<!-- ================= FIREBASE STUB (UNCHANGED) ================= -->
-<script>
-  if (typeof firebase === 'undefined') {
-    window.firebase = {
-      database: () => ({
-        ref: (path) => ({
-          push: () => ({ key: 'stub_key' }),
-          set: () => Promise.resolve(),
-          update: () => Promise.resolve(),
-          child: () => this,
-          remove: () => Promise.resolve()
-        })
-      }),
-      initializeApp: () => ({}),
-      analytics: () => ({ logEvent: () => {} })
-    };
-
-    window.LogToFirebaseJS = function(path, jsonPayload) {
-      console.log('[Firebase Stub]', path, jsonPayload);
-    };
-
-    console.log('[Firebase] Stub created ✓');
-  }
-</script>
-
-<!-- ================= AUDIO CONTEXT FIX (NEW, REQUIRED) ================= -->
-<script>
-  window.globalAudioContext = null;
-
-  function unlockAudioContext() {
-    if (!window.globalAudioContext) {
-      window.globalAudioContext =
-        new (window.AudioContext || window.webkitAudioContext)();
-      console.log('[Voice] Global AudioContext created');
-    }
-
-    if (window.globalAudioContext.state === 'suspended') {
-      window.globalAudioContext.resume().then(() => {
-        console.log('[Voice] AudioContext resumed by user gesture');
-      });
-    }
-  }
-</script>
-
-<!-- ================= UNITY CONTAINER ================= -->
-<div id="unity-container" class="unity-desktop">
-  <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
-
-  <div id="unity-loading-bar">
-    <div id="unity-logo"></div>
-    <div id="unity-progress-bar-empty">
-      <div id="unity-progress-bar-full"></div>
-    </div>
-  </div>
-
-  <div id="unity-warning"></div>
-
-  <div id="unity-footer">
-    <div id="unity-webgl-logo"></div>
-    <div id="unity-fullscreen-button"></div>
-    <div id="unity-build-title">WebProject</div>
-  </div>
-</div>
-
-<!-- ================= VOICE BUTTON ================= -->
-<button id="voiceBtn"
-style="
-position:fixed;
-z-index:9999;
-top:20px;
-left:20px;
-padding:12px 20px;
-font-size:16px;
-font-weight:bold;
-border-radius:8px;
-border:2px solid #4CAF50;
-background:#ffffff;
-color:#333;
-cursor:pointer;
-">
-🎤 Enable Voice
-</button>
-
-<script>
-  var container = document.querySelector("#unity-container");
-  var canvas = document.querySelector("#unity-canvas");
-  var loadingBar = document.querySelector("#unity-loading-bar");
-  var progressBarFull = document.querySelector("#unity-progress-bar-full");
-  var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-  var warningBanner = document.querySelector("#unity-warning");
-
-  function unityShowBanner(msg, type) {
-    var div = document.createElement("div");
-    div.innerHTML = msg;
-    warningBanner.appendChild(div);
-    if (type === "error") div.style = "background:red;color:white;";
-    if (type === "warning") setTimeout(() => div.remove(), 5000);
-  }
-
-  var buildUrl = "Build";
-  var loaderUrl = buildUrl + "/veonary--land.loader.js";
-
-  var config = {
-    dataUrl: buildUrl + "/veonary--land.data.unityweb",
-    frameworkUrl: buildUrl + "/veonary--land.framework.js.unityweb",
-    codeUrl: buildUrl + "/veonary--land.wasm.unityweb",
-    streamingAssetsUrl: "StreamingAssets",
-    companyName: "DefaultCompany",
-    productName: "WebProject",
-    productVersion: "0.1.0",
-    showBanner: unityShowBanner
-  };
-
-  loadingBar.style.display = "block";
-
-  var script = document.createElement("script");
-  script.src = loaderUrl;
-
-  script.onload = function () {
-    createUnityInstance(canvas, config, function (progress) {
-      progressBarFull.style.width = (100 * progress) + "%";
-    }).then(function (unityInstance) {
-      window.unityInstance = unityInstance;
-      loadingBar.style.display = "none";
-      fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
-      console.log("Unity loaded successfully!");
-    });
-  };
-
-  document.body.appendChild(script);
-</script>
-
-<!-- ================= VOICE BUTTON HANDLER ================= -->
-<script>
-  (function () {
-    const btn = document.getElementById("voiceBtn");
-    let enabled = false;
-
-    btn.onclick = function () {
-      if (!window.unityInstance || enabled) return;
-
-      // 🔑 THIS IS THE CRITICAL FIX
-      unlockAudioContext();
-
-      window.unityInstance.SendMessage(
-        "VoiceManager",
-        "StartVoice"
-      );
-
-      enabled = true;
-      btn.innerText = "✅ Voice Enabled";
-      btn.disabled = true;
-
-      console.log("[Voice] Enabled via user gesture");
-    };
-  })();
-</script>
-
-<!-- ================= EXPORTING JS FUNCTIONS ================= -->
-<script>
-// Add the voice-related functions to Unity's exported functions
-// Module['JS_AddPeer'] = function(peerActor) {
-//   // Your function logic here
-// };
-
-Module['JS_InitVoice'] = function(actor) {
-  // Your function logic here
-};
-
-Module['JS_RemovePeer'] = function(peerActor) {
-  // Your function logic here
-};
-
-Module['JS_StartVoice'] = function() {
-  // Your function logic here
-};
-
-Module['JS_VoiceSignal'] = function(ptr) {
-  // Your function logic here
-};
-</script>
-
-</body>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>GameName %UNITY_CUSTOM_MYTAG%</title>
+    <link rel="shortcut icon" href="TemplateData/img/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/css/style.css">
+    <script src="Build/UnityLoader.js"></script>
+	<script>
+		function ToggleFullScreen() {
+			var isInFullScreen = (document.fullscreenElement && document.fullscreenElement !== null) ||
+			(document.webkitFullscreenElement && document.webkitFullscreenElement !== null) ||
+			(document.mozFullScreenElement && document.mozFullScreenElement !== null) ||
+			(document.msFullscreenElement && document.msFullscreenElement !== null);
+			
+			var element = document.body.getElementsByClassName("webgl-content")[0];
+			
+			if (!isInFullScreen) {
+				document.getElementById("fullScreenButton").style.backgroundImage="url('TemplateData/img/fullScreen_off.png')";
+				return (element.requestFullscreen ||
+				element.webkitRequestFullscreen ||
+				element.mozRequestFullScreen ||
+				element.msRequestFullscreen).call(element);
+			}
+			else {
+				document.getElementById("fullScreenButton").style.backgroundImage="url('TemplateData/img/fullScreen_on.png')";
+				if (document.exitFullscreen) {
+					document.exitFullscreen();
+				} else if (document.webkitExitFullscreen) {
+					document.webkitExitFullscreen();
+				} else if (document.mozCancelFullScreen) {
+					document.mozCancelFullScreen();
+				} else if (document.msExitFullscreen) {
+					document.msExitFullscreen();
+				}
+			}
+		}
+		
+		function CheckCompatibility(gameInstance, onsuccess, onerror)
+		{
+			if (!UnityLoader.SystemInfo.hasWebGL) {
+				document.getElementById("errorBrowserBlock").style.display = "inherit";
+				onerror();
+			} else if (UnityLoader.SystemInfo.mobile) {
+				document.getElementById("warningMobileBlock").style.display = "inherit";
+				onsuccess();
+			} else if (["Firefox", "Chrome", "Safari"].indexOf(UnityLoader.SystemInfo.browser) == -1) {
+				document.getElementById("warningBrowserBlock").style.display = "inherit";
+				onsuccess();
+			} else {
+				onsuccess();
+			}
+		}
+		
+		function RuntimeInitialized(){
+		}
+		
+		function UnityProgress(gameInstance, progress) {
+			if (!gameInstance.Module)
+			return;
+			document.getElementById("loadingBlock").style.display = "inherit";	 	
+			document.getElementById("fullBar").style.width = (100 * progress) + "%";
+			document.getElementById("emptyBar").style.width = (100 * (1 - progress)) + "%";
+			if (progress == 1)
+			{
+				setTimeout(function(){ document.getElementById("loadingBlock").style.display = "none"; }, 3000);
+			}	
+		}
+		
+		var gameInstance = UnityLoader.instantiate("gameContainer", "%UNITY_WEBGL_BUILD_URL%", {
+			onProgress: UnityProgress,
+			compatibilityCheck:CheckCompatibility,
+			Module: {
+				//TOTAL_MEMORY: 268435456,
+				onRuntimeInitialized:RuntimeInitialized,
+			},		
+		});
+    </script>
+  </head>
+  <body>
+  
+    <div class="keepRatio">
+  
+		<div class="webgl-content">
+			<button id="fullScreenButton" onclick="ToggleFullScreen()"></button>
+			<div id="gameContainer"></div>
+		</div>
+		
+		
+		<div id="loadingBlock">
+			<img class="logo" src="TemplateData/img/Logo.png"></img>
+			<span class="subtitle"> CATCHPHRASE <br>
+			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+			</span>
+			
+			<div id="progressBar">
+				<div>LOADING ...</div>
+				<div class="centered">
+					<div id="emptyBar"></div>
+					<div id="fullBar"></div>
+				</div>
+			</div>
+			
+			<div id="warningBrowserBlock" style="display:none;">
+				<div class="warningBrowserText">
+					Your browser may not be compatible with this website. For an optimal experience, we suggest you to download one of this popular web browsers.
+				</div>
+				<div class="browserIcons">
+					<a href="https://www.mozilla.org/firefox" target="_blank"><img src="TemplateData/img/browser-firefox.png" alt="Firefox browser"></a>
+					<a href="https://www.google.com/chrome" target="_blank"><img src="TemplateData/img/browser-chrome.png" alt="Chrome browser"></a>
+					<a href="https://www.apple.com/safari/" target="_blank"><img src="TemplateData/img/browser-safari.png" alt="Safari browser"></a>
+				</div>
+			</div>
+			<div id="warningMobileBlock" style="display:none;">
+				<div class="warningBrowserText">
+					Please note that Unity WebGL is not currently supported on mobiles.
+				</div>
+			</div>
+			
+		</div>
+		
+		<div id="errorBrowserBlock" style="display:none;">
+			<img class="logo" src="TemplateData/img/Logo.png"></img>
+			<span class="subtitle"> CATCHPHRASE <br>
+			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+			</span>
+			
+			<div id="errorContent">
+				<div id="errorBrowserText">
+					Your browser does not support WebGL. <br> You can download one of this popular web browsers.
+				</div>
+				<div class="browserIcons">
+					<a href="https://www.mozilla.org/firefox" target="_blank"><img src="TemplateData/img/browser-firefox.png" alt="Firefox browser"></a>
+					<a href="https://www.google.com/chrome" target="_blank"><img src="TemplateData/img/browser-chrome.png" alt="Chrome browser"></a>
+					<a href="https://www.apple.com/safari/" target="_blank"><img src="TemplateData/img/browser-safari.png" alt="Safari browser"></a>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+	
+  </body>
 </html>
