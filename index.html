@@ -4,25 +4,14 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Unity WebGL Player | WebProject</title>
+  <title>Unity WebGL Player | My Unity Game</title>
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="TemplateData/style.css">
 </head>
 
-<body>
+<body style="margin: 0; padding: 0;">
 
-  <!-- ================= ANIMATED BACKGROUND ================= -->
-  <div class="background-animation">
-    <div class="gradient-orb orb-1"></div>
-    <div class="gradient-orb orb-2"></div>
-    <div class="gradient-orb orb-3"></div>
-  </div>
-
-  <!-- ================= FIREBASE STUB ================= -->
+  <!-- ================= FIREBASE STUB (UNCHANGED) ================= -->
   <script>
     if (typeof firebase === 'undefined') {
       window.firebase = {
@@ -47,7 +36,7 @@
     }
   </script>
 
-  <!-- ================= AUDIO CONTEXT FIX ================= -->
+  <!-- ================= AUDIO CONTEXT FIX (NEW, REQUIRED) ================= -->
   <script>
     window.globalAudioContext = null;
 
@@ -66,114 +55,75 @@
     }
   </script>
 
-  <!-- ================= MAIN CONTAINER ================= -->
+  <!-- ================= UNITY CONTAINER ================= -->
   <div id="unity-container" class="unity-desktop">
+    <canvas id="unity-canvas" width="960" height="600" tabindex="-1"></canvas>
 
-    <!-- Loading Screen -->
     <div id="unity-loading-bar">
-      <div class="loading-content">
-        <div id="unity-logo" class="pulse-animation"></div>
-        <h1 class="game-title">WebProject</h1>
-        <div class="loading-bar-container">
-          <div id="unity-progress-bar-empty">
-            <div id="unity-progress-bar-full"></div>
-          </div>
-          <div id="loading-percentage">0%</div>
-        </div>
-        <p class="loading-tip">Initializing multiplayer systems...</p>
-        <div class="developer-credit">
-          <span class="dev-icon">⚡</span>
-          <p class="dev-text">Crafted with <span class="heart">❤️</span> by <span class="dev-name">Mustafa Amin</span>
-          </p>
-          <p class="dev-subtitle">Welcome, Player! Ready to connect?</p>
-        </div>
+      <div id="unity-logo"></div>
+      <div id="unity-progress-bar-empty">
+        <div id="unity-progress-bar-full"></div>
       </div>
     </div>
 
-    <!-- Unity Canvas -->
-    <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
-
-    <!-- Warning Banner -->
     <div id="unity-warning"></div>
 
-    <!-- Game Controls Overlay -->
-    <div id="game-controls" class="controls-hidden">
-
-      <!-- Voice Chat Button -->
-      <button id="voiceBtn" class="control-btn voice-btn" title="Enable Voice Chat">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-          <line x1="12" y1="19" x2="12" y2="23"></line>
-          <line x1="8" y1="23" x2="16" y2="23"></line>
-        </svg>
-        <span class="btn-text">Enable Voice</span>
-        <div class="ripple"></div>
-      </button>
-
-      <!-- Fullscreen Button -->
-      <button id="unity-fullscreen-button" class="control-btn fullscreen-btn" title="Toggle Fullscreen">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
-          </path>
-        </svg>
-      </button>
-
-    </div>
-
-    <!-- Footer Info -->
     <div id="unity-footer">
       <div id="unity-webgl-logo"></div>
-      <div id="unity-build-title">WebProject</div>
+      <div id="unity-fullscreen-button"></div>
+      <div id="unity-build-title">My Unity Game</div>
     </div>
-
   </div>
 
-  <!-- ================= UNITY LOADER SCRIPT ================= -->
+  <!-- ================= VOICE BUTTON ================= -->
+  <button id="voiceBtn" style="
+position:fixed;
+z-index:9999;
+top:20px;
+left:20px;
+padding:12px 20px;
+font-size:16px;
+font-weight:bold;
+border-radius:8px;
+border:2px solid #4CAF50;
+background:#ffffff;
+color:#333;
+cursor:pointer;
+">
+    🎤 Enable Voice
+  </button>
+
   <script>
     var container = document.querySelector("#unity-container");
     var canvas = document.querySelector("#unity-canvas");
     var loadingBar = document.querySelector("#unity-loading-bar");
     var progressBarFull = document.querySelector("#unity-progress-bar-full");
-    var loadingPercentage = document.querySelector("#loading-percentage");
-    var loadingTip = document.querySelector(".loading-tip");
     var fullscreenButton = document.querySelector("#unity-fullscreen-button");
     var warningBanner = document.querySelector("#unity-warning");
-    var gameControls = document.querySelector("#game-controls");
-
-    // Loading tips
-    var tips = [
-      "Initializing multiplayer systems...",
-      "Loading game assets...",
-      "Connecting to servers...",
-      "Preparing voice chat...",
-      "Almost ready..."
-    ];
-    var currentTip = 0;
 
     function unityShowBanner(msg, type) {
       var div = document.createElement("div");
       div.innerHTML = msg;
       warningBanner.appendChild(div);
-      if (type === "error") div.style = "background:red;color:white;padding:10px;border-radius:8px;";
+      if (type === "error") div.style = "background:red;color:white;";
       if (type === "warning") setTimeout(() => div.remove(), 5000);
     }
 
     var buildUrl = "Build";
-    var loaderUrl = buildUrl + "/veonary--land.loader.js";
+    var loaderUrl = buildUrl + "/Build.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/veonary--land.data.unityweb",
-      frameworkUrl: buildUrl + "/veonary--land.framework.js.unityweb",
-      codeUrl: buildUrl + "/veonary--land.wasm.unityweb",
+      dataUrl: buildUrl + "/Build.data",
+      frameworkUrl: buildUrl + "/Build.framework.js",
+      codeUrl: buildUrl + "/Build.wasm",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
-    productName: { { { JSON.stringify(PRODUCT_NAME) } } },
-    productVersion: { { { JSON.stringify(PRODUCT_VERSION) } } },
-    showBanner: unityShowBanner
-  };
+      productName: "My Unity Game",
+      productVersion: "1.0",
+      showBanner: unityShowBanner
+    };
 
-    loadingBar.style.display = "flex";
+    loadingBar.style.display = "block";
 
     var script = document.createElement("script");
     script.src = loaderUrl;
@@ -181,27 +131,9 @@
     script.onload = function () {
       createUnityInstance(canvas, config, function (progress) {
         progressBarFull.style.width = (100 * progress) + "%";
-        loadingPercentage.textContent = Math.round(100 * progress) + "%";
-
-        // Update loading tips
-        var tipIndex = Math.floor(progress * tips.length);
-        if (tipIndex !== currentTip && tipIndex < tips.length) {
-          currentTip = tipIndex;
-          loadingTip.textContent = tips[tipIndex];
-          loadingTip.classList.add('fade-in');
-          setTimeout(() => loadingTip.classList.remove('fade-in'), 300);
-        }
       }).then(function (unityInstance) {
         window.unityInstance = unityInstance;
-
-        // Fade out loading screen
-        loadingBar.classList.add('fade-out');
-        setTimeout(() => {
-          loadingBar.style.display = "none";
-          gameControls.classList.remove('controls-hidden');
-          gameControls.classList.add('controls-visible');
-        }, 500);
-
+        loadingBar.style.display = "none";
         fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
         console.log("Unity loaded successfully!");
       });
@@ -216,38 +148,20 @@
       const btn = document.getElementById("voiceBtn");
       let enabled = false;
 
-      btn.onclick = function (e) {
+      btn.onclick = function () {
         if (!window.unityInstance || enabled) return;
 
-        // Create ripple effect
-        const ripple = btn.querySelector('.ripple');
-        const rect = btn.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const x = e.clientX - rect.left - size / 2;
-        const y = e.clientY - rect.top - size / 2;
-
-        ripple.style.width = ripple.style.height = size + 'px';
-        ripple.style.left = x + 'px';
-        ripple.style.top = y + 'px';
-        ripple.classList.add('ripple-active');
-
-        setTimeout(() => ripple.classList.remove('ripple-active'), 600);
-
-        // Unlock audio context
+        // 🔑 THIS IS THE CRITICAL FIX
         unlockAudioContext();
 
-        // Send message to Unity
         window.unityInstance.SendMessage(
           "VoiceManager",
           "StartVoice"
         );
 
         enabled = true;
-        btn.classList.add('active');
-        btn.querySelector('.btn-text').textContent = "Voice Enabled";
-
-        // Add pulsing animation when active
-        btn.classList.add('pulse-active');
+        btn.innerText = "✅ Voice Enabled";
+        btn.disabled = true;
 
         console.log("[Voice] Enabled via user gesture");
       };
