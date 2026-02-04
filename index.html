@@ -162,6 +162,9 @@
     var buildUrl = "Build";
     var loaderUrl = buildUrl + "/Build.loader.js";
 
+    console.log("[DEBUG] Build URL:", buildUrl);
+    console.log("[DEBUG] Loader URL:", loaderUrl);
+
     var config = {
       dataUrl: buildUrl + "/Build.data",
       frameworkUrl: buildUrl + "/Build.framework.js",
@@ -173,13 +176,29 @@
       showBanner: unityShowBanner
     };
 
+    console.log("[DEBUG] Unity Config:", config);
+    console.log("[DEBUG] Loading bar element:", loadingBar);
+    console.log("[DEBUG] Progress bar element:", progressBarFull);
+
     loadingBar.style.display = "block";
+    console.log("[DEBUG] Loading bar display set to block");
 
     var script = document.createElement("script");
     script.src = loaderUrl;
 
+    script.onerror = function (error) {
+      console.error("[ERROR] Failed to load Unity loader script:", loaderUrl);
+      console.error("[ERROR] Error details:", error);
+      unityShowBanner("Failed to load Unity loader. Check console for details.", "error");
+    };
+
     script.onload = function () {
+      console.log("[DEBUG] Unity loader script loaded successfully!");
+      console.log("[DEBUG] Calling createUnityInstance...");
+
       createUnityInstance(canvas, config, function (progress) {
+        console.log("[DEBUG] Loading progress:", Math.round(100 * progress) + "%");
+
         progressBarFull.style.width = (100 * progress) + "%";
         loadingPercentage.textContent = Math.round(100 * progress) + "%";
 
@@ -190,23 +209,31 @@
           loadingTip.textContent = tips[tipIndex];
           loadingTip.classList.add('fade-in');
           setTimeout(() => loadingTip.classList.remove('fade-in'), 300);
+          console.log("[DEBUG] Loading tip updated:", tips[tipIndex]);
         }
       }).then(function (unityInstance) {
+        console.log("[SUCCESS] Unity instance created successfully!");
         window.unityInstance = unityInstance;
 
         // Fade out loading screen
+        console.log("[DEBUG] Fading out loading screen...");
         loadingBar.classList.add('fade-out');
         setTimeout(() => {
           loadingBar.style.display = "none";
           gameControls.classList.remove('controls-hidden');
           gameControls.classList.add('controls-visible');
+          console.log("[DEBUG] Loading screen hidden, game controls visible");
         }, 500);
 
         fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
-        console.log("Unity loaded successfully!");
+        console.log("[SUCCESS] Unity loaded successfully! Game is ready.");
+      }).catch(function (error) {
+        console.error("[ERROR] Failed to create Unity instance:", error);
+        unityShowBanner("Failed to initialize Unity. Error: " + error.message, "error");
       });
     };
 
+    console.log("[DEBUG] Appending loader script to body...");
     document.body.appendChild(script);
   </script>
 
