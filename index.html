@@ -164,6 +164,7 @@
 
     console.log("[DEBUG] Build URL:", buildUrl);
     console.log("[DEBUG] Loader URL:", loaderUrl);
+    console.log("[DEBUG] Full Loader URL:", window.location.origin + "/" + loaderUrl);
 
     var config = {
       dataUrl: buildUrl + "/Build.data",
@@ -177,6 +178,10 @@
     };
 
     console.log("[DEBUG] Unity Config:", config);
+    console.log("[DEBUG] Expected file URLs:");
+    console.log("  - Data:", window.location.origin + "/" + config.dataUrl);
+    console.log("  - Framework:", window.location.origin + "/" + config.frameworkUrl);
+    console.log("  - Code:", window.location.origin + "/" + config.codeUrl);
     console.log("[DEBUG] Loading bar element:", loadingBar);
     console.log("[DEBUG] Progress bar element:", progressBarFull);
 
