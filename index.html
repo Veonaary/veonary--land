@@ -66,6 +66,7 @@
 </script>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   <!-- ================= MAIN CONTAINER ================= -->
   <div id="unity-container" class="unity-desktop">
 
@@ -87,6 +88,8 @@
           </p>
           <p class="dev-subtitle">Welcome, Player! Ready to connect?</p>
 =======
+=======
+>>>>>>> parent of b638622 (mikmkim)
 <!-- ================= MAIN CONTAINER ================= -->
 <div id="unity-container" class="unity-desktop">
   
@@ -98,6 +101,9 @@
       <div class="loading-bar-container">
         <div id="unity-progress-bar-empty">
           <div id="unity-progress-bar-full"></div>
+<<<<<<< HEAD
+>>>>>>> parent of b638622 (mikmkim)
+=======
 >>>>>>> parent of b638622 (mikmkim)
         </div>
         <div id="loading-percentage">0%</div>
@@ -107,8 +113,13 @@
   </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     <!-- Unity Canvas -->
     <canvas id="unity-canvas" width="960" height="600" tabindex="-1"></canvas>
+=======
+  <!-- Unity Canvas -->
+  <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
+>>>>>>> parent of b638622 (mikmkim)
 =======
   <!-- Unity Canvas -->
   <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
@@ -132,6 +143,7 @@
       <div class="ripple"></div>
     </button>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
       <!-- Voice Chat Button -->
       <button id="voiceBtn" class="control-btn voice-btn" title="Enable Voice Chat">
@@ -161,12 +173,17 @@
       <div id="unity-build-title">My Unity Game</div>
     </div>
 =======
+=======
+>>>>>>> parent of b638622 (mikmkim)
     <!-- Fullscreen Button -->
     <button id="unity-fullscreen-button" class="control-btn fullscreen-btn" title="Toggle Fullscreen">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
       </svg>
     </button>
+<<<<<<< HEAD
+>>>>>>> parent of b638622 (mikmkim)
+=======
 >>>>>>> parent of b638622 (mikmkim)
 
   </div>
@@ -191,6 +208,7 @@
   var warningBanner = document.querySelector("#unity-warning");
   var gameControls = document.querySelector("#game-controls");
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     var buildUrl = "./Build";
     var loaderUrl = buildUrl + "/Build.loader.js";
@@ -231,6 +249,18 @@
   ];
   var currentTip = 0;
 
+=======
+  // Loading tips
+  var tips = [
+    "Initializing multiplayer systems...",
+    "Loading game assets...",
+    "Connecting to servers...",
+    "Preparing voice chat...",
+    "Almost ready..."
+  ];
+  var currentTip = 0;
+
+>>>>>>> parent of b638622 (mikmkim)
   function unityShowBanner(msg, type) {
     var div = document.createElement("div");
     div.innerHTML = msg;
@@ -254,6 +284,7 @@
   };
 
   loadingBar.style.display = "flex";
+<<<<<<< HEAD
 >>>>>>> parent of b638622 (mikmkim)
 
   var script = document.createElement("script");
@@ -355,6 +386,87 @@
     })();
   </script>
 =======
+  script.onload = function () {
+    createUnityInstance(canvas, config, function (progress) {
+      progressBarFull.style.width = (100 * progress) + "%";
+      loadingPercentage.textContent = Math.round(100 * progress) + "%";
+      
+      // Update loading tips
+      var tipIndex = Math.floor(progress * tips.length);
+      if (tipIndex !== currentTip && tipIndex < tips.length) {
+        currentTip = tipIndex;
+        loadingTip.textContent = tips[tipIndex];
+        loadingTip.classList.add('fade-in');
+        setTimeout(() => loadingTip.classList.remove('fade-in'), 300);
+      }
+    }).then(function (unityInstance) {
+      window.unityInstance = unityInstance;
+      
+      // Fade out loading screen
+      loadingBar.classList.add('fade-out');
+      setTimeout(() => {
+        loadingBar.style.display = "none";
+        gameControls.classList.remove('controls-hidden');
+        gameControls.classList.add('controls-visible');
+      }, 500);
+
+      fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
+      console.log("Unity loaded successfully!");
+    });
+  };
+
+  document.body.appendChild(script);
+</script>
+
+<!-- ================= VOICE BUTTON HANDLER ================= -->
+<script>
+  (function () {
+    const btn = document.getElementById("voiceBtn");
+    let enabled = false;
+
+    btn.onclick = function (e) {
+      if (!window.unityInstance || enabled) return;
+
+      // Create ripple effect
+      const ripple = btn.querySelector('.ripple');
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+      
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = x + 'px';
+      ripple.style.top = y + 'px';
+      ripple.classList.add('ripple-active');
+      
+      setTimeout(() => ripple.classList.remove('ripple-active'), 600);
+
+      // Unlock audio context
+      unlockAudioContext();
+
+      // Send message to Unity
+      window.unityInstance.SendMessage(
+        "VoiceManager",
+        "StartVoice"
+      );
+
+      enabled = true;
+      btn.classList.add('active');
+      btn.querySelector('.btn-text').textContent = "Voice Enabled";
+      
+      // Add pulsing animation when active
+      btn.classList.add('pulse-active');
+
+      console.log("[Voice] Enabled via user gesture");
+    };
+  })();
+</script>
+>>>>>>> parent of b638622 (mikmkim)
+=======
+
+  var script = document.createElement("script");
+  script.src = loaderUrl;
+
   script.onload = function () {
     createUnityInstance(canvas, config, function (progress) {
       progressBarFull.style.width = (100 * progress) + "%";
