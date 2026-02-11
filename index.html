@@ -246,6 +246,13 @@
         loadingBar.classList.add('fade-out');
         setTimeout(() => {
           loadingBar.style.display = "none";
+
+          // NOW show the auth overlay (after Unity is loaded)
+          const authOverlay = document.getElementById('auth-overlay');
+          if (authOverlay) {
+            authOverlay.classList.add('visible');
+            console.log('[Auth] Unity loaded! Showing authentication overlay...');
+          }
         }, 500);
 
         fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
@@ -316,17 +323,74 @@
       }
     };
 
+    // Wait for buttons to be clicked, then call Firebase directly
+    // (These functions work because Firebase is loaded in the browser, not Unity)
+
     // Google Sign In Button
     document.getElementById('googleSignInBtn').onclick = function () {
       console.log('[Auth] Google Sign In clicked');
-      SignInWithGoogleJS();
+
+      var provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider).then(function (result) {
+        var user = result.user;
+
+        // Create JSON payload
+        var userData = JSON.stringify({
+          userId: user.uid,
+          displayName: user.displayName || 'User_' + user.uid.substring(0, 8)
+        });
+
+        console.log('[Auth] Google sign-in successful:', userData);
+
+        // Hide the auth overlay
+        window.hideAuthOverlay();
+
+        // Wait for Unity to be ready, then send message
+        waitForUnityAndSend(userData);
+      }).catch(function (error) {
+        console.error('[Auth] Google sign-in failed:', error);
+        alert('Sign in failed: ' + error.message);
+      });
     };
 
     // Guest Sign In Button
     document.getElementById('guestSignInBtn').onclick = function () {
       console.log('[Auth] Guest Sign In clicked');
-      SignInAnonymouslyJS();
+
+      firebase.auth().signInAnonymously().then(function (result) {
+        var user = result.user;
+
+        // Create JSON payload for guest user
+        var userData = JSON.stringify({
+          userId: user.uid,
+          displayName: 'Guest_' + user.uid.substring(0, 8)
+        });
+
+        console.log('[Auth] Guest sign-in successful:', userData);
+
+        // Hide the auth overlay
+        window.hideAuthOverlay();
+
+        // Wait for Unity to be ready, then send message
+        waitForUnityAndSend(userData);
+      }).catch(function (error) {
+        console.error('[Auth] Guest sign-in failed:', error);
+        alert('Sign in failed: ' + error.message);
+      });
     };
+
+    // Helper function to wait for Unity and send auth data
+    function waitForUnityAndSend(userData) {
+      var checkUnity = setInterval(function () {
+        if (window.unityInstance) {
+          clearInterval(checkUnity);
+          console.log('[Auth] Sending to Unity AuthManager:', userData);
+          window.unityInstance.SendMessage('AuthManager', 'OnLoginSuccess', userData);
+        } else {
+          console.log('[Auth] Waiting for Unity to load...');
+        }
+      }, 100); // Check every 100ms
+    }
   </script>
 
 </body>
