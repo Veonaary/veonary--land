@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Unity WebGL Player | WebProject</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="TemplateData/style.css">
+</head>
+
+<body>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+  <script>
+    // Your copied config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDL0J3vGGKeLwQQ7Miv5Ox6UhnZVLdqr_I",
+      authDomain: "veonaryland.firebaseapp.com",
+      databaseURL: "https://veonaryland-default-rtdb.firebaseio.com",
+      projectId: "veonaryland",
+      storageBucket: "veonaryland.firebasestorage.app",
+      messagingSenderId: "698296234742",
+      appId: "1:698296234742:web:71e622735c9f8327e972d7",
+      measurementId: "G-8B9LCVKM4M"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    console.log("Firebase initialized for WebGL");
+  </script>
+  <!-- Animated Background -->
+  <div class="animated-bg">
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+  </div>
+
+  <!-- Authentication Overlay -->
+  <div id="auth-overlay" class="auth-overlay">
+    <div class="auth-card">
+      <h1 class="auth-title">Welcome to Veonary Land</h1>
+      <p class="auth-subtitle">Choose how to join the metaverse</p>
+
+      <button id="googleSignInBtn" class="auth-btn primary">
+        <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            fill="#4285F4" />
+          <path
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            fill="#34A853" />
+          <path
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            fill="#FBBC05" />
+          <path
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            fill="#EA4335" />
+        </svg>
+        Sign in with Google
+      </button>
+
+      <button id="guestSignInBtn" class="auth-btn secondary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        Play as Guest
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div id="unity-container" class="unity-desktop">
+    <!-- Unity Canvas -->
+    <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
+
+    <!-- Loading Screen -->
+    <div id="unity-loading-bar">
+      <div class="loading-content">
+        <div id="unity-logo" class="pulse-animation"></div>
+        <h2 class="game-title">WebProject</h2>
+        <div class="loading-bar-container">
+          <div id="unity-progress-bar-empty">
+            <div id="unity-progress-bar-full"></div>
+          </div>
+          <div id="loading-percentage">0%</div>
+        </div>
+        <p class="loading-tip">Initializing multiplayer systems...</p>
+      </div>
+    </div>
+
+    <!-- Warning Banner -->
+    <div id="unity-warning"></div>
+
+    <!-- Footer Controls -->
+    <div id="unity-footer">
+      <div class="footer-left">
+        <div id="unity-webgl-logo"></div>
+        <div id="unity-build-title">WebProject</div>
+      </div>
+      <div class="footer-right">
+        <button id="unity-fullscreen-button" class="control-btn" title="Fullscreen">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Voice Chat Controls -->
+  <div id="voice-controls" class="glass-panel">
+    <button id="voiceBtn" class="voice-btn" title="Enable Voice Chat">
+      <svg class="mic-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+        <line x1="12" y1="19" x2="12" y2="23" />
+        <line x1="8" y1="23" x2="16" y2="23" />
+      </svg>
+      <span class="voice-text">Enable Voice</span>
+    </button>
+    <div class="voice-indicator" id="voiceIndicator">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+  </div>
+
+  <!-- Firebase Stub -->
+  <script>
+    if (typeof firebase === 'undefined') {
+      window.firebase = {
+        database: () => ({
+          ref: (path) => ({
+            push: () => ({ key: 'stub_key' }),
+            set: () => Promise.resolve(),
+            update: () => Promise.resolve(),
+            child: () => this,
+            remove: () => Promise.resolve()
+          })
+        }),
+        initializeApp: () => ({}),
+        analytics: () => ({ logEvent: () => { } })
+      };
+
+      window.LogToFirebaseJS = function (path, jsonPayload) {
+        console.log('[Firebase Stub]', path, jsonPayload);
+      };
+
+      console.log('[Firebase] Stub created ✓');
+    }
+  </script>
+
+  <!-- Audio Context Fix -->
+  <script>
+    window.globalAudioContext = null;
+
+    function unlockAudioContext() {
+      if (!window.globalAudioContext) {
+        window.globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        console.log('[Voice] Global AudioContext created');
+      }
+
+      if (window.globalAudioContext.state === 'suspended') {
+        window.globalAudioContext.resume().then(() => {
+          console.log('[Voice] AudioContext resumed by user gesture');
+        });
+      }
+    }
+  </script>
+
+  <!-- Unity Loader -->
+  <script>
+    var container = document.querySelector("#unity-container");
+    var canvas = document.querySelector("#unity-canvas");
+    var loadingBar = document.querySelector("#unity-loading-bar");
+    var progressBarFull = document.querySelector("#unity-progress-bar-full");
+    var loadingPercentage = document.querySelector("#loading-percentage");
+    var loadingTip = document.querySelector(".loading-tip");
+    var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+    var warningBanner = document.querySelector("#unity-warning");
+
+    // Loading tips
+    const loadingTips = [
+      "Initializing multiplayer systems...",
+      "Loading game assets...",
+      "Connecting to servers...",
+      "Preparing voice chat...",
+      "Almost ready..."
+    ];
+    let tipIndex = 0;
+
+    function updateLoadingTip() {
+      if (loadingTip && tipIndex < loadingTips.length) {
+        loadingTip.textContent = loadingTips[tipIndex];
+        tipIndex++;
+      }
+    }
+
+    setInterval(updateLoadingTip, 2000);
+
+    function unityShowBanner(msg, type) {
+      var div = document.createElement("div");
+      div.innerHTML = msg;
+      warningBanner.appendChild(div);
+      if (type === "error") div.style = "background:red;color:white;padding:10px;";
+      if (type === "warning") setTimeout(() => div.remove(), 5000);
+    }
+
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/Build.loader.js";
+
+    var config = {
+      dataUrl: buildUrl + "/Build.data.unityweb",
+      frameworkUrl: buildUrl + "/Build.framework.js.unityweb",
+      codeUrl: buildUrl + "/Build.wasm.unityweb",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "DefaultCompany",
+    productName: { { { JSON.stringify(PRODUCT_NAME) } } },
+    productVersion: { { { JSON.stringify(PRODUCT_VERSION) } } },
+    showBanner: unityShowBanner
+    };
+
+    loadingBar.style.display = "flex";
+
+    var script = document.createElement("script");
+    script.src = loaderUrl;
+
+    script.onload = function () {
+      createUnityInstance(canvas, config, function (progress) {
+        progressBarFull.style.width = (100 * progress) + "%";
+        loadingPercentage.textContent = Math.round(100 * progress) + "%";
+      }).then(function (unityInstance) {
+        window.unityInstance = unityInstance;
+
+        // Fade out loading screen
+        loadingBar.classList.add('fade-out');
+        setTimeout(() => {
+          loadingBar.style.display = "none";
+        }, 500);
+
+        fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
+        console.log("Unity loaded successfully!");
+      }).catch(function (message) {
+        alert(message);
+      });
+    };
+
+    document.body.appendChild(script);
+  </script>
+
+  <!-- Voice Button Handler -->
+  <script>
+    (function () {
+      const btn = document.getElementById("voiceBtn");
+      const indicator = document.getElementById("voiceIndicator");
+      let enabled = false;
+
+      btn.onclick = function () {
+        if (!window.unityInstance || enabled) return;
+
+        // Unlock AudioContext
+        unlockAudioContext();
+
+        window.unityInstance.SendMessage(
+          "VoiceManager",
+          "StartVoice"
+        );
+
+        enabled = true;
+        btn.classList.add('active');
+        btn.querySelector('.voice-text').textContent = "Voice Active";
+        indicator.classList.add('active');
+
+        console.log("[Voice] Enabled via user gesture");
+      };
+    })();
+  </script>
+
+  <!-- Responsive Handler -->
+  <script>
+    function handleResize() {
+      const container = document.getElementById('unity-container');
+      if (window.innerWidth <= 768) {
+        container.classList.remove('unity-desktop');
+        container.classList.add('unity-mobile');
+      } else {
+        container.classList.remove('unity-mobile');
+        container.classList.add('unity-desktop');
+      }
+    }
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+  </script>
+
+  <!-- Authentication Handlers -->
+  <script>
+    // Function to hide the auth overlay
+    window.hideAuthOverlay = function () {
+      const overlay = document.getElementById('auth-overlay');
+      if (overlay) {
+        overlay.classList.add('hidden');
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 500);
+      }
+    };
+
+    // Google Sign In Button
+    document.getElementById('googleSignInBtn').onclick = function () {
+      console.log('[Auth] Google Sign In clicked');
+      SignInWithGoogleJS();
+    };
+
+    // Guest Sign In Button
+    document.getElementById('guestSignInBtn').onclick = function () {
+      console.log('[Auth] Guest Sign In clicked');
+      SignInAnonymouslyJS();
+    };
+  </script>
+
+</body>
+
+</html>
