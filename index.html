@@ -17,6 +17,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-remote-config-compat.js"></script>
 
   <script>
     // Your copied config
@@ -34,6 +35,25 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     console.log("Firebase initialized for WebGL");
+
+    const remoteConfig = firebase.remoteConfig();
+    remoteConfig.settings = {
+      minimumFetchIntervalMillis: 3600000, // 1 hour for prod
+    };
+
+    // Set default value
+    remoteConfig.defaultConfig = {
+      "admin_emails": ""
+    };
+
+    // Fetch and activate immediately (ignoring cache for dev purposes if needed, but sticking to default logic)
+    remoteConfig.fetchAndActivate()
+      .then(() => {
+        console.log('[RemoteConfig] Fetched and activated');
+      })
+      .catch((err) => {
+        console.error('[RemoteConfig] Fetch failed', err);
+      });
   </script>
   <!-- Animated Background -->
   <div class="animated-bg">
@@ -251,8 +271,8 @@
       codeUrl: buildUrl + "/veonary--land.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
-    productName: "WebProject",
-    productVersion: "0.1.0",
+    productName: { { { JSON.stringify(PRODUCT_NAME) } } },
+    productVersion: { { { JSON.stringify(PRODUCT_VERSION) } } },
     showBanner: unityShowBanner
     };
 
@@ -355,6 +375,75 @@
     // Track whether we're in Sign In or Sign Up mode
     var isSignUpMode = false;
 
+    // FIX: Prevent Unity from capturing keyboard input when typing in fields
+    function stopPropagation(e) {
+      e.stopPropagation();
+    }
+
+    const inputIds = ['authEmail', 'authPassword'];
+    inputIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('keydown', stopPropagation);
+        el.addEventListener('keyup', stopPropagation);
+        el.addEventListener('keypress', stopPropagation);
+      }
+    });
+
+    // Helper to construct user data and check admin status
+    // Helper to construct user data and check admin status
+    function processUserAndSend(user) {
+      // 1. Construct basic user data
+      var userDataObj = {
+        userId: user.uid,
+        displayName: user.displayName || user.email.split('@')[0] || 'Guest_' + user.uid.substring(0, 8),
+        email: user.email || "",
+        photoURL: user.photoURL || "",
+        isAnonymous: user.isAnonymous,
+        isAdmin: false // Default to false
+      };
+
+      console.log('[Auth] Fetching Remote Config for admin check...');
+
+      // 2. FORCE Fetch Remote Config (Wait for it!)
+      // This ensures we have the latest list of admins
+      remoteConfig.fetchAndActivate()
+        .then(() => {
+          console.log('[Auth] Remote Config fetched successfully.');
+
+          // Get the admin emails string
+          const adminEmailsString = remoteConfig.getString('admin_emails');
+          console.log('[Auth] Admin emails list:', adminEmailsString);
+
+          if (userDataObj.email && adminEmailsString) {
+            // Split by comma and trim whitespace to get array of emails
+            const adminList = adminEmailsString.split(',').map(email => email.trim());
+
+            if (adminList.includes(userDataObj.email)) {
+              console.log('[Auth] User IS an admin (via Remote Config)!');
+              userDataObj.isAdmin = true;
+            } else {
+              console.log('[Auth] User is NOT an admin.');
+            }
+          } else {
+            console.log('[Auth] No admin emails configured or user has no email.');
+          }
+
+          // 3. Send final data to Unity (INSIDE the .then block)
+          var finalJson = JSON.stringify(userDataObj);
+          window.hideAuthOverlay();
+          waitForUnityAndSend(finalJson);
+        })
+        .catch((err) => {
+          console.error('[Auth] Remote Config fetch failed, continuing as normal user:', err);
+
+          // Even if fetch fails, we MUST send the user data to Unity so they can play
+          var finalJson = JSON.stringify(userDataObj);
+          window.hideAuthOverlay();
+          waitForUnityAndSend(finalJson);
+        });
+    }
+
     // Toggle between Sign In and Sign Up
     document.getElementById('toggleAuth').onclick = function (e) {
       e.preventDefault();
@@ -393,16 +482,8 @@
         console.log('[Auth] Email Sign Up clicked');
         firebase.auth().createUserWithEmailAndPassword(email, password)
           .then(function (result) {
-            var user = result.user;
-
-            var userData = JSON.stringify({
-              userId: user.uid,
-              displayName: email.split('@')[0] // Use part before @ as display name
-            });
-
-            console.log('[Auth] Sign up successful:', userData);
-            window.hideAuthOverlay();
-            waitForUnityAndSend(userData);
+            console.log('[Auth] Sign up successful');
+            processUserAndSend(result.user);
           })
           .catch(function (error) {
             console.error('[Auth] Sign up failed:', error);
@@ -413,16 +494,8 @@
         console.log('[Auth] Email Sign In clicked');
         firebase.auth().signInWithEmailAndPassword(email, password)
           .then(function (result) {
-            var user = result.user;
-
-            var userData = JSON.stringify({
-              userId: user.uid,
-              displayName: user.displayName || email.split('@')[0]
-            });
-
-            console.log('[Auth] Email sign-in successful:', userData);
-            window.hideAuthOverlay();
-            waitForUnityAndSend(userData);
+            console.log('[Auth] Email sign-in successful');
+            processUserAndSend(result.user);
           })
           .catch(function (error) {
             console.error('[Auth] Email sign-in failed:', error);
@@ -437,21 +510,8 @@
 
       var provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth().signInWithPopup(provider).then(function (result) {
-        var user = result.user;
-
-        // Create JSON payload
-        var userData = JSON.stringify({
-          userId: user.uid,
-          displayName: user.displayName || 'User_' + user.uid.substring(0, 8)
-        });
-
-        console.log('[Auth] Google sign-in successful:', userData);
-
-        // Hide the auth overlay
-        window.hideAuthOverlay();
-
-        // Wait for Unity to be ready, then send message
-        waitForUnityAndSend(userData);
+        console.log('[Auth] Google sign-in successful');
+        processUserAndSend(result.user);
       }).catch(function (error) {
         console.error('[Auth] Google sign-in failed:', error);
         alert('Sign in failed: ' + error.message);
@@ -463,21 +523,8 @@
       console.log('[Auth] Guest Sign In clicked');
 
       firebase.auth().signInAnonymously().then(function (result) {
-        var user = result.user;
-
-        // Create JSON payload for guest user
-        var userData = JSON.stringify({
-          userId: user.uid,
-          displayName: 'Guest_' + user.uid.substring(0, 8)
-        });
-
-        console.log('[Auth] Guest sign-in successful:', userData);
-
-        // Hide the auth overlay
-        window.hideAuthOverlay();
-
-        // Wait for Unity to be ready, then send message
-        waitForUnityAndSend(userData);
+        console.log('[Auth] Guest sign-in successful');
+        processUserAndSend(result.user);
       }).catch(function (error) {
         console.error('[Auth] Guest sign-in failed:', error);
         alert('Sign in failed: ' + error.message);
