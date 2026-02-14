@@ -271,8 +271,8 @@
       codeUrl: buildUrl + "/veonary--land.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
-    productName: "WebProject",
-    productVersion: "0.1.0",
+    productName: { { { JSON.stringify(PRODUCT_NAME) } } },
+    productVersion: { { { JSON.stringify(PRODUCT_VERSION) } } },
     showBanner: unityShowBanner
     };
 
@@ -317,24 +317,36 @@
       const btn = document.getElementById("voiceBtn");
       const indicator = document.getElementById("voiceIndicator");
       let enabled = false;
+      let isMuted = false;
 
       btn.onclick = function () {
-        if (!window.unityInstance || enabled) return;
+        if (!window.unityInstance) return;
 
-        // Unlock AudioContext
-        unlockAudioContext();
+        if (!enabled) {
+          // First Time: Enable Voice
+          unlockAudioContext();
+          window.unityInstance.SendMessage("VoiceManager", "StartVoice");
 
-        window.unityInstance.SendMessage(
-          "VoiceManager",
-          "StartVoice"
-        );
+          enabled = true;
+          btn.classList.add('active');
+          btn.querySelector('.voice-text').textContent = "Mute Mic";
+          indicator.classList.add('active');
+          console.log("[Voice] Enabled via user gesture");
+        } else {
+          // Interaction: Toggle Mute
+          isMuted = !isMuted;
+          window.unityInstance.SendMessage("VoiceManager", "SetMute", isMuted ? 1 : 0);
 
-        enabled = true;
-        btn.classList.add('active');
-        btn.querySelector('.voice-text').textContent = "Voice Active";
-        indicator.classList.add('active');
-
-        console.log("[Voice] Enabled via user gesture");
+          if (isMuted) {
+            btn.querySelector('.voice-text').textContent = "Unmute";
+            btn.style.backgroundColor = "#ff4444"; // Visual feedback
+            indicator.style.opacity = "0.3";
+          } else {
+            btn.querySelector('.voice-text').textContent = "Mute Mic";
+            btn.style.backgroundColor = ""; // Reset
+            indicator.style.opacity = "1";
+          }
+        }
       };
     })();
   </script>
@@ -396,9 +408,9 @@
       // 1. Construct basic user data
       var safeName = 'Guest_' + user.uid.substring(0, 8);
       if (user.displayName) {
-          safeName = user.displayName;
+        safeName = user.displayName;
       } else if (user.email) {
-          safeName = user.email.split('@')[0];
+        safeName = user.email.split('@')[0];
       }
 
       var userDataObj = {
