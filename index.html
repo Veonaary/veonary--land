@@ -17,7 +17,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-remote-config-compat.js"></script>
 
   <script>
     // Your copied config
@@ -35,25 +34,6 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     console.log("Firebase initialized for WebGL");
-
-    const remoteConfig = firebase.remoteConfig();
-    remoteConfig.settings = {
-      minimumFetchIntervalMillis: 3600000, // 1 hour for prod
-    };
-
-    // Set default value
-    remoteConfig.defaultConfig = {
-      "admin_emails": ""
-    };
-
-    // Fetch and activate immediately (ignoring cache for dev purposes if needed, but sticking to default logic)
-    remoteConfig.fetchAndActivate()
-      .then(() => {
-        console.log('[RemoteConfig] Fetched and activated');
-      })
-      .catch((err) => {
-        console.error('[RemoteConfig] Fetch failed', err);
-      });
   </script>
   <!-- Animated Background -->
   <div class="animated-bg">
@@ -422,41 +402,27 @@
         isAdmin: false // Default to false
       };
 
-      console.log('[Auth] Fetching Remote Config for admin check...');
+      // Admin status comes from an AUTHENTICATED read of /admin_uids/{uid}.
+      // RTDB rules deny client writes to that path, so the only way to become
+      // admin is via the Firebase console (or a future Cloud Function with the
+      // Admin SDK). The browser can no longer spoof isAdmin=true by editing JS.
+      console.log('[Auth] Reading /admin_uids/' + user.uid + ' from RTDB...');
 
-      // 2. FORCE Fetch Remote Config (Wait for it!)
-      // This ensures we have the latest list of admins
-      remoteConfig.fetchAndActivate()
-        .then(() => {
-          console.log('[Auth] Remote Config fetched successfully.');
+      firebase.database().ref('admin_uids/' + user.uid).once('value')
+        .then(function (snap) {
+          userDataObj.isAdmin = snap.exists() && snap.val() === true;
+          console.log('[Auth] isAdmin =', userDataObj.isAdmin);
 
-          // Get the admin emails string
-          const adminEmailsString = remoteConfig.getString('admin_emails');
-          console.log('[Auth] Admin emails list:', adminEmailsString);
-
-          if (userDataObj.email && adminEmailsString) {
-            // Split by comma and trim whitespace to get array of emails
-            const adminList = adminEmailsString.split(',').map(email => email.trim());
-
-            if (adminList.includes(userDataObj.email)) {
-              console.log('[Auth] User IS an admin (via Remote Config)!');
-              userDataObj.isAdmin = true;
-            } else {
-              console.log('[Auth] User is NOT an admin.');
-            }
-          } else {
-            console.log('[Auth] No admin emails configured or user has no email.');
-          }
-
-          // 3. Send final data to Unity (INSIDE the .then block)
           var finalJson = JSON.stringify(userDataObj);
           window.hideAuthOverlay();
           waitForUnityAndSend(finalJson);
         })
-        .catch((err) => {
-          console.error('[Auth] Remote Config fetch failed, continuing as normal user:', err);
+        .catch(function (err) {
+          // Read failed (network, rules denial, etc). Send the user through as
+          // non-admin rather than blocking login — they still get to play.
+          console.error('[Auth] admin_uids read failed, defaulting to non-admin:', err);
+          userDataObj.isAdmin = false;
 
-          // Even if fetch fails, we MUST send the user data to Unity so they can play
           var finalJson = JSON.stringify(userDataObj);
           window.hideAuthOverlay();
           waitForUnityAndSend(finalJson);
