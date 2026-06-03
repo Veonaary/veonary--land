@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Unity WebGL Player | WebProject</title>
+  <title>VEONARYLAND</title>
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -110,8 +110,10 @@
     <!-- Loading Screen -->
     <div id="unity-loading-bar">
       <div class="loading-content">
-        <div id="unity-logo" class="pulse-animation"></div>
-        <h2 class="game-title">WebProject</h2>
+        <div class="brand-mark pulse-animation">
+          <span class="brand-veonary">VEONARY</span><span class="brand-land">LAND</span>
+        </div>
+        <p class="brand-tagline">Enter the metaverse</p>
         <div class="loading-bar-container">
           <div id="unity-progress-bar-empty">
             <div id="unity-progress-bar-full"></div>
@@ -128,8 +130,7 @@
     <!-- Footer Controls -->
     <div id="unity-footer">
       <div class="footer-left">
-        <div id="unity-webgl-logo"></div>
-        <div id="unity-build-title">WebProject</div>
+        <div id="unity-build-title"><span class="brand-veonary">VEONARY</span><span class="brand-land">LAND</span></div>
       </div>
       <div class="footer-right">
         <button id="unity-fullscreen-button" class="control-btn" title="Fullscreen">
@@ -217,11 +218,11 @@
 
     // Loading tips
     const loadingTips = [
-      "Initializing multiplayer systems...",
-      "Loading game assets...",
-      "Connecting to servers...",
-      "Preparing voice chat...",
-      "Almost ready..."
+      "Initializing multiplayer systems…",
+      "Loading the world…",
+      "Connecting to the nearest region…",
+      "Warming up voice chat…",
+      "Almost there…"
     ];
     let tipIndex = 0;
 

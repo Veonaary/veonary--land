@@ -171,21 +171,44 @@ body {
 
 .loading-content {
     text-align: center;
-    padding: var(--spacing-xl);
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
+    padding: calc(var(--spacing-xl) * 1.25) var(--spacing-xl);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    backdrop-filter: blur(24px);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    min-width: 400px;
+    box-shadow: var(--shadow-lg), 0 0 60px rgba(123, 111, 245, 0.15);
+    min-width: 420px;
 }
 
-#unity-logo {
-    width: 154px;
-    height: 130px;
-    background: url('unity-logo-dark.png') no-repeat center;
-    background-size: contain;
-    margin: 0 auto var(--spacing-lg);
+/* ---- VEONARYLAND wordmark (replaces the Unity logo) ---- */
+.brand-mark {
+    font-size: 2.6rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    margin-bottom: var(--spacing-sm);
+    line-height: 1;
+    user-select: none;
+}
+
+.brand-veonary {
+    background: linear-gradient(135deg, #8a9bff 0%, #b07bff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.brand-land {
+    color: var(--text-primary);
+    opacity: 0.92;
+}
+
+.brand-tagline {
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
 }
 
 .pulse-animation {
@@ -234,10 +257,22 @@ body {
 #unity-progress-bar-full {
     width: 0%;
     height: 100%;
-    background: var(--primary-gradient);
+    background: linear-gradient(90deg, #667eea, #b07bff, #667eea);
+    background-size: 200% 100%;
     border-radius: var(--radius-full);
     transition: width 0.3s ease;
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 0 20px rgba(123, 111, 245, 0.7);
+    animation: shimmer 2.5s linear infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 #loading-percentage {
@@ -294,18 +329,23 @@ body {
     gap: var(--spacing-md);
 }
 
-#unity-webgl-logo {
-    width: 204px;
-    height: 38px;
-    background: url('webgl-logo.png') no-repeat center;
-    background-size: contain;
+#unity-build-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
 }
 
-#unity-build-title {
-    font-size: 1.125rem;
-    font-weight: 600;
+/* footer wordmark inherits the two-tone brand spans */
+#unity-build-title .brand-veonary {
+    background: linear-gradient(135deg, #8a9bff 0%, #b07bff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+#unity-build-title .brand-land {
     color: var(--text-primary);
-    letter-spacing: -0.01em;
+    opacity: 0.9;
 }
 
 .control-btn {
@@ -495,9 +535,13 @@ body {
         font-size: 1.25rem;
     }
 
-    #unity-logo {
-        width: 120px;
-        height: 100px;
+    .brand-mark {
+        font-size: 2rem;
+    }
+
+    .brand-tagline {
+        font-size: 0.75rem;
+        letter-spacing: 0.2em;
     }
 
     .voice-btn {
