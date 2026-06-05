@@ -19,8 +19,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
   <!-- Agora Web SDK (voice/video/screen-share). Used by AgoraBridge.jslib.
-       crossorigin so the browser doesn't tripwire CORS on the SDK's own fetches. -->
-  <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js" crossorigin="anonymous"></script>
+       Served from our OWN origin (TemplateData/) so Vercel/CORS can't block it —
+       loading it from Agora's CDN was being rejected with a CORS error. Download
+       the SDK once and place it next to this file (see note below). -->
+  <script src="TemplateData/AgoraRTC_N-4.20.0.js"></script>
   <script>
     // Cloud Function that mints short-lived Agora tokens. AgoraBridge.jslib reads
     // this; kept here (not baked into the build) so the URL can change without a
