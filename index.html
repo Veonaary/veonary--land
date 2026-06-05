@@ -18,8 +18,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
-  <!-- Agora Web SDK (voice/video/screen-share). Used by AgoraBridge.jslib. -->
-  <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
+  <!-- Agora Web SDK (voice/video/screen-share). Used by AgoraBridge.jslib.
+       crossorigin so the browser doesn't tripwire CORS on the SDK's own fetches. -->
+  <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js" crossorigin="anonymous"></script>
   <script>
     // Cloud Function that mints short-lived Agora tokens. AgoraBridge.jslib reads
     // this; kept here (not baked into the build) so the URL can change without a
@@ -256,7 +257,7 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/d9b1acb539ccc008a9d6743c4326295f.data.unityweb",
+      dataUrl: buildUrl + "/14755f49f179b5fd95575ea7bd4bf4b4.data.unityweb",
       frameworkUrl: buildUrl + "/cc1dee399dd1f8262f8656ef098bf163.framework.js.unityweb",
       codeUrl: buildUrl + "/13ecb6f7a9558d30c6b53f18be3167be.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
