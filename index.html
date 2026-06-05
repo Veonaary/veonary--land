@@ -172,7 +172,65 @@
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
     </div>
+
+    <!-- Camera toggle. Disabled until voice is enabled (must be in the channel). -->
+    <button id="cameraBtn" class="voice-btn" title="Turn Camera On" disabled>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 7l-7 5 7 5V7z" />
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+      </svg>
+      <span class="cam-text">Camera</span>
+    </button>
   </div>
+
+  <!-- Floating camera tiles (bottom-right). Populated by AgoraBridge.jslib. -->
+  <div id="agora-tiles"></div>
+
+  <style>
+    /* Floating camera tiles, stacked upward from the bottom-right corner. */
+    #agora-tiles {
+      position: fixed;
+      right: 16px;
+      bottom: 96px;            /* sit above the voice/camera control bar */
+      display: flex;
+      flex-direction: column-reverse; /* newest tiles stack upward */
+      gap: 10px;
+      z-index: 50;
+      pointer-events: none;    /* tiles don't block game clicks */
+    }
+    .agora-tile {
+      width: 180px;
+      height: 135px;           /* 4:3 video */
+      border-radius: 12px;
+      overflow: hidden;
+      background: #0b0d14;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+    .agora-tile-video {
+      width: 100%;
+      height: 100%;
+      background: #0b0d14;
+    }
+    /* Agora injects its own <video>; make sure it fills the tile. */
+    .agora-tile-video video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+    }
+    .agora-tile-label {
+      position: absolute;
+      left: 8px;
+      bottom: 6px;
+      padding: 2px 8px;
+      font: 600 12px/1.4 'Inter', sans-serif;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.55);
+      border-radius: 6px;
+      pointer-events: none;
+    }
+  </style>
 
   <!-- Firebase Stub -->
   <script>
@@ -259,9 +317,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/4fe2b7c0a7a7a6abcddc6a49f2bc6ad8.data.unityweb",
-      frameworkUrl: buildUrl + "/dfb5c1818bcc190e5b2f1499ad5ae324.framework.js.unityweb",
-      codeUrl: buildUrl + "/c6f63c306a2af5fe68e37359b2c340e0.wasm.unityweb",
+      dataUrl: buildUrl + "/a087da4d902e0bae279d056c1a6fc5d4.data.unityweb",
+      frameworkUrl: buildUrl + "/a291d74b54f29c0acc4c3d2f21f6de08.framework.js.unityweb",
+      codeUrl: buildUrl + "/9812bedfe39634c058e9d77fe50b18dd.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
@@ -325,6 +383,10 @@
           btn.querySelector('.voice-text').textContent = "Mute Mic";
           indicator.classList.add('active');
           console.log("[Voice] Enabled via user gesture");
+
+          // Camera needs an active channel — unlock the camera button now.
+          var camBtn = document.getElementById("cameraBtn");
+          if (camBtn) camBtn.disabled = false;
         } else {
           // Interaction: Toggle Mute
           isMuted = !isMuted;
@@ -340,6 +402,33 @@
             indicator.style.opacity = "1";
           }
         }
+      };
+    })();
+  </script>
+
+  <!-- Camera Button Handler -->
+  <script>
+    (function () {
+      const camBtn = document.getElementById("cameraBtn");
+      if (!camBtn) return;
+      let camOn = false;
+
+      camBtn.onclick = function () {
+        if (!window.unityInstance || camBtn.disabled) return;
+
+        camOn = !camOn;
+        window.unityInstance.SendMessage("VoiceManager", "SetCamera", camOn ? 1 : 0);
+
+        if (camOn) {
+          camBtn.classList.add('active');
+          camBtn.querySelector('.cam-text').textContent = "Camera On";
+          camBtn.title = "Turn Camera Off";
+        } else {
+          camBtn.classList.remove('active');
+          camBtn.querySelector('.cam-text').textContent = "Camera";
+          camBtn.title = "Turn Camera On";
+        }
+        console.log("[Camera] Toggled:", camOn);
       };
     })();
   </script>
