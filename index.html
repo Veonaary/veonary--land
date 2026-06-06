@@ -154,6 +154,16 @@
       </svg>
       <span class="voice-text">Enable Voice</span>
     </button>
+
+    <button id="cameraBtn" class="voice-btn" title="Toggle Camera">
+      <svg class="cam-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <polygon points="23 7 16 12 23 17 23 7" />
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+      </svg>
+      <span class="cam-text">Camera</span>
+    </button>
+
     <div class="voice-indicator" id="voiceIndicator">
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
@@ -328,6 +338,34 @@
             indicator.style.opacity = "1";
           }
         }
+      };
+    })();
+  </script>
+
+  <!-- Camera Button Handler -->
+  <script>
+    (function () {
+      const camBtn = document.getElementById("cameraBtn");
+      if (!camBtn) return;
+      let camOn = false;
+
+      camBtn.onclick = function () {
+        if (!window.unityInstance) return;
+
+        // Camera requires being in the Agora channel — that happens when voice
+        // is enabled. AgoraVoiceManager.SetCamera logs a warning and no-ops if
+        // not in a channel yet, so prompt the user to enable voice first.
+        camOn = !camOn;
+        window.unityInstance.SendMessage("VoiceManager", "SetCamera", camOn ? 1 : 0);
+
+        if (camOn) {
+          camBtn.classList.add('active');
+          camBtn.querySelector('.cam-text').textContent = "Camera On";
+        } else {
+          camBtn.classList.remove('active');
+          camBtn.querySelector('.cam-text').textContent = "Camera";
+        }
+        console.log("[Camera] Button toggled:", camOn);
       };
     })();
   </script>
