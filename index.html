@@ -38,6 +38,12 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     console.log("Firebase initialized for WebGL");
+
+    // Agora token endpoint — the 'agoraToken' Cloud Function (region us-central1,
+    // project veonaryland). AgoraBridge.jslib POSTs the signed-in user's Firebase
+    // ID token here and gets back { appId, token, uid } to join the channel.
+    window.AGORA_TOKEN_URL = "https://us-central1-veonaryland.cloudfunctions.net/agoraToken";
+    console.log("Agora token URL set:", window.AGORA_TOKEN_URL);
   </script>
   <!-- Animated Background -->
   <div class="animated-bg">
@@ -175,6 +181,10 @@
       <div class="wave-bar"></div>
     </div>
   </div>
+
+  <!-- Agora video tiles: AgoraBridge.jslib renders each remote (and local)
+       camera video into a tile inside this container (bottom-right corner). -->
+  <div id="agora-tiles"></div>
 
   <!-- Firebase Stub -->
   <script>
