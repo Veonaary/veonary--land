@@ -526,20 +526,36 @@
         isAdmin: false // Default to false
       };
 
-      // Admin status comes from an AUTHENTICATED read of /admin_uids/{uid}.
-      // RTDB rules deny client writes to that path, so the only way to become
-      // admin is via the Firebase console (or a future Cloud Function with the
-      // Admin SDK). The browser can no longer spoof isAdmin=true by editing JS.
-      console.log('[Auth] Reading /admin_uids/' + user.uid + ' from RTDB...');
+      // Admin status: the signed-in EMAIL is matched against the admin list at
+      // /admin_emails in the Realtime Database (a comma-separated string of
+      // emails). RTDB rules make that node read-only to clients, so admins can
+      // only be changed from the Firebase console — manage clients' admins by
+      // simply adding their email there. Match is case-insensitive + trimmed.
+      var myEmail = (user.email || "").trim().toLowerCase();
+      console.log('[Auth] Reading /admin_emails from RTDB to check:', myEmail);
 
-      firebase.database().ref('admin_uids/' + user.uid).once('value')
+      firebase.database().ref('admin_emails').once('value')
         .then(function (snap) {
-          userDataObj.isAdmin = snap.exists() && snap.val() === true;
-          console.log('[Auth] isAdmin =', userDataObj.isAdmin);
+          var isAdmin = false;
+          if (myEmail && snap.exists()) {
+            var raw = snap.val();
+            var list = [];
+            if (typeof raw === 'string') {
+              list = raw.split(',');
+            } else if (raw && typeof raw === 'object') {
+              // Also support a { "email": true } object form.
+              list = Object.keys(raw);
+            }
+            isAdmin = list.some(function (e) {
+              return String(e).trim().toLowerCase() === myEmail;
+            });
+          }
+          userDataObj.isAdmin = isAdmin;
+          console.log('[Auth] isAdmin =', isAdmin);
 
           // Reveal the admin-only screen-share button.
-          window.__isAdmin = userDataObj.isAdmin;
-          if (userDataObj.isAdmin) {
+          window.__isAdmin = isAdmin;
+          if (isAdmin) {
             var sb = document.getElementById('screenBtn');
             if (sb) sb.style.display = '';
           }
@@ -549,9 +565,9 @@
           waitForUnityAndSend(finalJson);
         })
         .catch(function (err) {
-          // Read failed (network, rules denial, etc). Send the user through as
+          // Read failed (network, rules, etc). Send the user through as
           // non-admin rather than blocking login — they still get to play.
-          console.error('[Auth] admin_uids read failed, defaulting to non-admin:', err);
+          console.error('[Auth] admin_emails read failed, defaulting to non-admin:', err);
           userDataObj.isAdmin = false;
 
           var finalJson = JSON.stringify(userDataObj);
