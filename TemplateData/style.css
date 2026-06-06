@@ -1,144 +1,138 @@
-/* ==================== CSS VARIABLES ==================== */
+/* ============================================================================
+   VEONARYLAND — Web shell styling
+   Design: dark "premium gamer" aesthetic. Glassmorphism (frosted, high-contrast
+   text), one indigo→violet→cyan accent system, GPU-only animations
+   (transform/opacity) so the 60fps WebGL canvas underneath stays smooth.
+   Every class/id here is referenced by index.html / AgoraBridge — names kept.
+============================================================================ */
+
+/* ==================== VARIABLES ==================== */
 :root {
-    /* Colors */
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --dark-bg: #0a0e27;
-    --dark-surface: #151a30;
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --text-primary: #ffffff;
-    --text-secondary: #a0aec0;
+    --accent-1: #7b6ff5;   /* indigo  */
+    --accent-2: #b07bff;   /* violet  */
+    --accent-3: #4fd0ff;   /* cyan    */
+    --grad-accent: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 60%, var(--accent-3) 120%);
 
-    /* Spacing */
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
+    --bg-0: #07080f;       /* deepest */
+    --bg-1: #0b0d1a;
+    --bg-2: #12152a;
 
-    /* Border Radius */
-    --radius-sm: 0.5rem;
-    --radius-md: 1rem;
-    --radius-lg: 1.5rem;
-    --radius-full: 9999px;
+    --glass-bg: rgba(255, 255, 255, 0.055);
+    --glass-bg-strong: rgba(255, 255, 255, 0.09);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-hi: rgba(255, 255, 255, 0.22);
 
-    /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.5);
+    --text-1: #f4f6ff;
+    --text-2: #aab2c9;
+    --text-3: #6c7593;
+
+    --ok: #38d39f;
+    --danger: #ff5470;
+
+    --r-sm: 0.55rem;
+    --r-md: 1rem;
+    --r-lg: 1.5rem;
+    --r-full: 9999px;
+
+    --sp-xs: 0.25rem;
+    --sp-sm: 0.5rem;
+    --sp-md: 1rem;
+    --sp-lg: 1.5rem;
+    --sp-xl: 2rem;
+
+    --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 18px 60px rgba(0, 0, 0, 0.5);
+    --glow: 0 0 28px rgba(123, 111, 245, 0.45);
+
+    --ease: cubic-bezier(0.22, 1, 0.36, 1); /* smooth "expo-out" feel */
 }
 
-/* ==================== GLOBAL STYLES ==================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* ==================== GLOBAL ==================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    height: 100%;
+    overflow: hidden;
 }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--dark-bg);
-    color: var(--text-primary);
-    overflow: hidden;
+    background: var(--bg-0);
+    color: var(--text-1);
     position: relative;
-    min-height: 100vh;
     width: 100vw;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
+::selection { background: rgba(123, 111, 245, 0.4); color: #fff; }
+
 /* ==================== ANIMATED BACKGROUND ==================== */
+/* Aurora: a few large blurred orbs drifting slowly + a faint moving grid.
+   All transform/opacity based → GPU, cheap. */
 .animated-bg {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     z-index: 0;
     overflow: hidden;
-    background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+    background:
+        radial-gradient(1200px 800px at 15% -10%, #161a38 0%, transparent 60%),
+        radial-gradient(1000px 700px at 110% 120%, #1a1430 0%, transparent 55%),
+        linear-gradient(160deg, var(--bg-1) 0%, var(--bg-0) 100%);
+}
+
+/* subtle drifting grid for "digital world" feel */
+.animated-bg::after {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    background-image:
+        linear-gradient(rgba(123, 111, 245, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(123, 111, 245, 0.06) 1px, transparent 1px);
+    background-size: 46px 46px;
+    mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 70%);
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 70%);
+    animation: gridDrift 30s linear infinite;
+    will-change: transform;
+}
+
+@keyframes gridDrift {
+    from { transform: translate(0, 0); }
+    to   { transform: translate(46px, 46px); }
 }
 
 .gradient-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.3;
-    animation: float 20s ease-in-out infinite;
+    filter: blur(90px);
+    opacity: 0.45;
+    will-change: transform;
 }
+.orb-1 { width: 520px; height: 520px; background: radial-gradient(circle, var(--accent-1), transparent 70%); top: -12%; left: -8%; animation: float1 24s ease-in-out infinite; }
+.orb-2 { width: 440px; height: 440px; background: radial-gradient(circle, var(--accent-2), transparent 70%); bottom: -14%; right: -10%; animation: float2 28s ease-in-out infinite; }
+.orb-3 { width: 380px; height: 380px; background: radial-gradient(circle, var(--accent-3), transparent 70%); top: 45%; left: 55%; opacity: 0.3; animation: float3 32s ease-in-out infinite; }
 
-.orb-1 {
-    width: 500px;
-    height: 500px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    top: -10%;
-    left: -10%;
-    animation-delay: 0s;
-}
+@keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(60px,40px) scale(1.12); } }
+@keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-50px,-30px) scale(0.92); } }
+@keyframes float3 { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-46%,-56%) scale(1.1); } }
 
-.orb-2 {
-    width: 400px;
-    height: 400px;
-    background: linear-gradient(135deg, #f093fb, #f5576c);
-    bottom: -10%;
-    right: -10%;
-    animation-delay: 7s;
-}
-
-.orb-3 {
-    width: 350px;
-    height: 350px;
-    background: linear-gradient(135deg, #4facfe, #00f2fe);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation-delay: 14s;
-}
-
-@keyframes float {
-
-    0%,
-    100% {
-        transform: translate(0, 0) scale(1);
-    }
-
-    33% {
-        transform: translate(30px, -30px) scale(1.1);
-    }
-
-    66% {
-        transform: translate(-20px, 20px) scale(0.9);
-    }
-}
-
-/* ==================== UNITY CONTAINER ==================== */
+/* ==================== UNITY CONTAINER / CANVAS ==================== */
 #unity-container {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1;
 }
-
-#unity-container.unity-desktop {
-    padding: 80px 20px 80px 20px;
-    /* Space for voice controls and footer */
-}
-
-#unity-container.unity-mobile {
-    padding: 70px 10px 10px 10px;
-    /* Space for voice controls on mobile */
-}
+#unity-container.unity-desktop { padding: 76px 20px; }
+#unity-container.unity-mobile  { padding: 64px 8px 8px; }
 
 #unity-canvas {
-    background: var(--dark-surface);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+    background: var(--bg-2);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.05);
     display: block;
     max-width: 100%;
     max-height: 100%;
@@ -146,798 +140,545 @@ body {
     height: auto !important;
     object-fit: contain;
 }
-
-.unity-mobile #unity-canvas {
-    border-radius: var(--radius-sm);
-}
+.unity-mobile #unity-canvas { border-radius: var(--r-md); }
 
 /* ==================== LOADING SCREEN ==================== */
 #unity-loading-bar {
     position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 2000;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.6s var(--ease);
+    background:
+        radial-gradient(900px 600px at 50% 35%, rgba(123,111,245,0.10), transparent 70%),
+        var(--bg-0);
 }
-
-#unity-loading-bar.fade-out {
-    opacity: 0;
-}
+#unity-loading-bar.fade-out { opacity: 0; pointer-events: none; }
 
 .loading-content {
+    position: relative;
     text-align: center;
-    padding: calc(var(--spacing-xl) * 1.25) var(--spacing-xl);
-    background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-    backdrop-filter: blur(24px);
+    padding: calc(var(--sp-xl) * 1.4) var(--sp-xl) var(--sp-xl);
+    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
+    backdrop-filter: blur(26px);
+    -webkit-backdrop-filter: blur(26px);
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg), 0 0 60px rgba(123, 111, 245, 0.15);
-    min-width: 420px;
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg), 0 0 70px rgba(123, 111, 245, 0.16);
+    min-width: 440px;
+    max-width: 90vw;
+    animation: cardIn 0.7s var(--ease) both;
+    overflow: hidden;
+}
+/* sheen sweep across the card */
+.loading-content::before {
+    content: "";
+    position: absolute;
+    top: 0; left: -60%;
+    width: 40%; height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.07), transparent);
+    transform: skewX(-18deg);
+    animation: cardSheen 4.5s ease-in-out infinite;
+}
+@keyframes cardSheen { 0% { left: -60%; } 55%,100% { left: 130%; } }
+
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(26px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
-/* ---- VEONARYLAND wordmark (replaces the Unity logo) ---- */
+/* ---- orbital loader ring above the wordmark ---- */
+.loading-orbit {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--sp-lg);
+    position: relative;
+}
+.loading-orbit::before,
+.loading-orbit::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+}
+.loading-orbit::before {
+    border-top-color: var(--accent-1);
+    border-right-color: var(--accent-2);
+    animation: spin 1s linear infinite;
+}
+.loading-orbit::after {
+    inset: 10px;
+    border-bottom-color: var(--accent-3);
+    animation: spin 1.6s linear infinite reverse;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- VEONARYLAND wordmark ---- */
 .brand-mark {
-    font-size: 2.6rem;
+    font-size: 2.7rem;
     font-weight: 800;
     letter-spacing: 0.04em;
-    margin-bottom: var(--spacing-sm);
     line-height: 1;
+    margin-bottom: var(--sp-sm);
     user-select: none;
 }
-
 .brand-veonary {
-    background: linear-gradient(135deg, #8a9bff 0%, #b07bff 100%);
+    background: var(--grad-accent);
+    background-size: 200% auto;
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: hueShift 6s linear infinite;
 }
-
-.brand-land {
-    color: var(--text-primary);
-    opacity: 0.92;
-}
+@keyframes hueShift { to { background-position: 200% center; } }
+.brand-land { color: var(--text-1); opacity: 0.92; }
 
 .brand-tagline {
-    font-size: 0.9rem;
-    font-weight: 500;
-    letter-spacing: 0.28em;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-lg);
+    color: var(--text-2);
+    margin-bottom: var(--sp-lg);
 }
 
-.pulse-animation {
-    animation: pulse 2s ease-in-out infinite;
-}
+.pulse-animation { animation: brandPulse 2.4s ease-in-out infinite; }
+@keyframes brandPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.035); } }
 
-@keyframes pulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.05);
-        opacity: 0.8;
-    }
-}
-
-.game-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: var(--spacing-lg);
-    letter-spacing: -0.02em;
-}
-
-.loading-bar-container {
-    margin-bottom: var(--spacing-md);
-}
+.loading-bar-container { margin-bottom: var(--sp-md); }
 
 #unity-progress-bar-empty {
     width: 100%;
-    height: 24px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: var(--radius-full);
+    height: 12px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: var(--r-full);
     overflow: hidden;
     position: relative;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--sp-sm);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
 }
-
 #unity-progress-bar-full {
     width: 0%;
     height: 100%;
-    background: linear-gradient(90deg, #667eea, #b07bff, #667eea);
-    background-size: 200% 100%;
-    border-radius: var(--radius-full);
-    transition: width 0.3s ease;
-    box-shadow: 0 0 20px rgba(123, 111, 245, 0.7);
-    animation: shimmer 2.5s linear infinite;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-2), var(--accent-3), var(--accent-1));
+    background-size: 300% 100%;
+    border-radius: var(--r-full);
+    transition: width 0.35s var(--ease);
+    box-shadow: 0 0 14px rgba(123, 111, 245, 0.8);
+    animation: barFlow 2.2s linear infinite;
+    position: relative;
 }
-
-@keyframes shimmer {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
+@keyframes barFlow { to { background-position: -300% 0; } }
+/* moving highlight head on the bar */
+#unity-progress-bar-full::after {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 40px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55));
+    border-radius: var(--r-full);
 }
 
 #loading-percentage {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: var(--spacing-md);
-}
-
-.loading-tip {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-    animation: fadeInOut 2s ease-in-out infinite;
-}
-
-@keyframes fadeInOut {
-
-    0%,
-    100% {
-        opacity: 0.6;
-    }
-
-    50% {
-        opacity: 1;
-    }
-}
-
-/* ==================== FOOTER CONTROLS ==================== */
-#unity-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 var(--spacing-lg);
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--glass-border);
-    z-index: 1000;
-}
-
-.unity-mobile #unity-footer {
-    display: none;
-}
-
-.footer-left,
-.footer-right {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-#unity-build-title {
     font-size: 1.05rem;
-    font-weight: 800;
-    letter-spacing: 0.03em;
+    font-weight: 700;
+    color: var(--text-1);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: var(--sp-sm);
 }
-
-/* footer wordmark inherits the two-tone brand spans */
-#unity-build-title .brand-veonary {
-    background: linear-gradient(135deg, #8a9bff 0%, #b07bff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+.loading-tip {
+    font-size: 0.85rem;
+    color: var(--text-2);
+    font-weight: 500;
+    min-height: 1.2em;
+    animation: tipFade 0.6s var(--ease);
 }
+@keyframes tipFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 0.85; transform: none; } }
 
-#unity-build-title .brand-land {
-    color: var(--text-primary);
-    opacity: 0.9;
+/* ==================== AUTH OVERLAY ==================== */
+.auth-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6, 8, 16, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 }
+.auth-overlay.visible { display: flex; animation: fadeIn 0.5s var(--ease); }
+.auth-overlay.hidden  { animation: fadeOut 0.5s var(--ease) forwards; }
 
-.control-btn {
-    width: 44px;
-    height: 44px;
-    background: var(--glass-bg);
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
+
+.auth-card {
+    position: relative;
+    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
+    border-radius: var(--r-lg);
+    padding: calc(var(--sp-xl) * 1.1) var(--sp-xl);
+    box-shadow: var(--shadow-lg), 0 0 60px rgba(123, 111, 245, 0.14);
+    text-align: center;
+    width: 92%;
+    max-width: 430px;
+    animation: cardIn 0.6s var(--ease) 0.05s both;
+    overflow: hidden;
+}
+/* animated gradient hairline at the top edge */
+.auth-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--grad-accent);
+    background-size: 200% auto;
+    animation: hueShift 5s linear infinite;
+    z-index: 2;
+}
+/* cursor-follow glow (premium touch). --mx/--my set from JS in index.html;
+   defaults keep it centered if JS doesn't run. */
+.auth-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%),
+                rgba(123, 111, 245, 0.18), transparent 45%);
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
+    pointer-events: none;
+}
+.auth-card:hover::after { opacity: 1; }
+
+.auth-title {
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: var(--sp-xs);
+    background: linear-gradient(120deg, #fff 30%, var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.auth-subtitle {
+    font-size: 0.95rem;
+    color: var(--text-2);
+    margin-bottom: var(--sp-xl);
+    font-weight: 500;
+}
+
+.auth-form { width: 100%; margin-bottom: var(--sp-md); }
+
+.auth-input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--r-md);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-1);
+    font-size: 0.95rem;
+    font-family: inherit;
+    margin-bottom: var(--sp-sm);
+    transition: border-color 0.2s var(--ease), background 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.auth-input::placeholder { color: var(--text-3); }
+.auth-input:focus {
+    outline: none;
+    border-color: rgba(123, 111, 245, 0.8);
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0 0 3px rgba(123, 111, 245, 0.18);
+}
+
+.auth-btn {
+    position: relative;
+    width: 100%;
+    padding: 0.85rem 1.25rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--r-md);
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
     cursor: pointer;
+    transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease), background 0.18s var(--ease), border-color 0.18s var(--ease);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    gap: var(--sp-sm);
+    margin-bottom: var(--sp-md);
+    overflow: hidden;
 }
+.auth-btn:active { transform: translateY(0) scale(0.99); }
 
-.control-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+.auth-btn.primary {
+    background: var(--grad-accent);
+    background-size: 180% auto;
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 6px 20px rgba(123, 111, 245, 0.35);
+}
+.auth-btn.primary:hover {
     transform: translateY(-2px);
+    background-position: right center;
+    box-shadow: 0 10px 30px rgba(123, 111, 245, 0.5), var(--glow);
+}
+.auth-btn.secondary {
+    background: var(--glass-bg);
+    color: var(--text-1);
+}
+.auth-btn.secondary:hover {
+    transform: translateY(-2px);
+    background: var(--glass-bg-strong);
+    border-color: rgba(123, 111, 245, 0.5);
     box-shadow: var(--shadow-md);
 }
 
-.control-btn:active {
-    transform: translateY(0);
-}
+.google-icon { width: 20px; height: 20px; }
 
-/* ==================== VOICE CONTROLS ==================== */
+.auth-toggle-text { margin-top: var(--sp-xs); font-size: 0.88rem; color: var(--text-2); }
+.auth-link {
+    color: var(--accent-2);
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 4px;
+    transition: color 0.2s var(--ease);
+}
+.auth-link:hover { color: var(--accent-3); text-decoration: underline; }
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: var(--sp-lg) 0;
+    color: var(--text-3);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+.auth-divider::before, .auth-divider::after {
+    content: ""; flex: 1; border-bottom: 1px solid var(--glass-border);
+}
+.auth-divider span { padding: 0 var(--sp-md); }
+
+/* ==================== TOP-LEFT CONTROL DOCK (voice/cam/screen) ==================== */
 #voice-controls {
     position: fixed;
-    top: var(--spacing-lg);
-    left: var(--spacing-lg);
+    top: var(--sp-md);
+    left: var(--sp-md);
     z-index: 1000;
-    /* Hidden until Unity reaches the actual game scene (not the lobby).
-       Unity reveals it via JS_ShowVoiceButton -> adds the .visible class. */
-    display: none;
+    display: none; /* shown by JS when in the game scene */
     align-items: center;
-    gap: var(--spacing-md);
+    gap: var(--sp-sm);
 }
-
-#voice-controls.visible {
-    display: flex;
-    animation: fadeIn 0.4s ease-out;
-}
+#voice-controls.visible { display: flex; animation: dockIn 0.45s var(--ease); }
+@keyframes dockIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
 
 .glass-panel {
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-sm);
+    border-radius: var(--r-md);
+    padding: var(--sp-xs);
     box-shadow: var(--shadow-md);
 }
 
 .voice-btn {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-lg);
-    background: var(--glass-bg);
-    border: 2px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
-    font-size: 1rem;
+    gap: var(--sp-sm);
+    padding: 0.55rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--r-sm);
+    color: var(--text-1);
+    font-size: 0.9rem;
     font-weight: 600;
+    font-family: inherit;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'Inter', sans-serif;
+    transition: transform 0.16s var(--ease), background 0.16s var(--ease), border-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
+    white-space: nowrap;
 }
-
 .voice-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(102, 126, 234, 0.5);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
+    background: var(--glass-bg-strong);
+    border-color: rgba(123, 111, 245, 0.5);
+    box-shadow: var(--glow);
 }
+.voice-btn:active { transform: translateY(0) scale(0.98); }
+.voice-btn svg { transition: transform 0.16s var(--ease); }
+.voice-btn:hover svg { transform: scale(1.12); }
 
+/* active = mic/cam/screen on → filled accent */
 .voice-btn.active {
-    background: var(--primary-gradient);
+    background: var(--grad-accent);
+    background-size: 180% auto;
     border-color: transparent;
-    box-shadow: var(--shadow-glow);
+    color: #fff;
+    box-shadow: var(--glow);
+    animation: hueShift 6s linear infinite;
 }
 
-.voice-btn.active:hover {
-    transform: translateY(-2px) scale(1.02);
-}
-
-.mic-icon {
-    transition: transform 0.3s ease;
-}
-
-.voice-btn:hover .mic-icon {
-    transform: scale(1.1);
-}
-
+/* voice level wave */
 .voice-indicator {
     display: none;
-    align-items: center;
-    gap: 4px;
-    padding: var(--spacing-sm) var(--spacing-md);
+    align-items: flex-end;
+    gap: 3px;
+    padding: 0 var(--sp-sm);
+    height: 26px;
 }
-
-.voice-indicator.active {
-    display: flex;
-}
-
+.voice-indicator.active { display: flex; }
 .wave-bar {
     width: 3px;
-    height: 16px;
-    background: var(--primary-gradient);
-    border-radius: var(--radius-full);
+    height: 8px;
+    background: var(--grad-accent);
+    border-radius: var(--r-full);
     animation: wave 1s ease-in-out infinite;
 }
+.wave-bar:nth-child(1) { animation-delay: 0s; }
+.wave-bar:nth-child(2) { animation-delay: 0.15s; }
+.wave-bar:nth-child(3) { animation-delay: 0.3s; }
+.wave-bar:nth-child(4) { animation-delay: 0.45s; }
+@keyframes wave { 0%,100% { height: 8px; } 50% { height: 22px; } }
 
-.wave-bar:nth-child(1) {
-    animation-delay: 0s;
+/* ==================== FOOTER ==================== */
+#unity-footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--sp-lg);
+    background: linear-gradient(0deg, rgba(7,8,15,0.85), transparent);
+    z-index: 1000;
 }
+.unity-mobile #unity-footer { display: none; }
+.footer-left, .footer-right { display: flex; align-items: center; gap: var(--sp-md); }
 
-.wave-bar:nth-child(2) {
-    animation-delay: 0.1s;
+#unity-build-title { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.03em; }
+#unity-build-title .brand-veonary {
+    background: var(--grad-accent);
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: hueShift 6s linear infinite;
 }
+#unity-build-title .brand-land { color: var(--text-1); opacity: 0.9; }
 
-.wave-bar:nth-child(3) {
-    animation-delay: 0.2s;
+.control-btn {
+    width: 42px; height: 42px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--r-sm);
+    color: var(--text-1);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.16s var(--ease), background 0.16s var(--ease), box-shadow 0.16s var(--ease), border-color 0.16s var(--ease);
 }
-
-.wave-bar:nth-child(4) {
-    animation-delay: 0.3s;
+.control-btn:hover {
+    background: var(--glass-bg-strong);
+    border-color: rgba(123,111,245,0.5);
+    transform: translateY(-2px);
+    box-shadow: var(--glow);
 }
-
-@keyframes wave {
-
-    0%,
-    100% {
-        height: 16px;
-    }
-
-    50% {
-        height: 24px;
-    }
-}
+.control-btn:active { transform: translateY(0); }
 
 /* ==================== AGORA VIDEO TILES ==================== */
 #agora-tiles {
     position: fixed;
-    bottom: 80px;
-    right: var(--spacing-lg);
+    bottom: 72px;
+    right: var(--sp-lg);
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--sp-sm);
     align-items: flex-end;
     pointer-events: none;
-    /* tiles themselves re-enable pointer events */
 }
-
 .agora-tile {
-    width: 200px;
-    height: 130px;
+    width: 210px; height: 132px;
     background: #000;
-    border-radius: var(--radius-md);
+    border-radius: var(--r-md);
     overflow: hidden;
     border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-md);
     position: relative;
     pointer-events: auto;
+    animation: tileIn 0.4s var(--ease);
 }
-
-.agora-tile-video {
-    width: 100%;
-    height: 100%;
-}
-
-/* Agora injects its own <video>; make it fill the tile. */
-.agora-tile-video video {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover;
-}
-
+@keyframes tileIn { from { opacity: 0; transform: translateX(20px) scale(0.95); } to { opacity: 1; transform: none; } }
+.agora-tile-video { width: 100%; height: 100%; }
+.agora-tile-video video { width: 100% !important; height: 100% !important; object-fit: cover; }
 .agora-tile-label {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 2px 8px;
-    font-size: 0.75rem;
+    bottom: 0; left: 0; right: 0;
+    padding: 3px 8px;
+    font-size: 0.74rem;
     font-weight: 600;
     color: #fff;
-    background: rgba(0, 0, 0, 0.5);
-}
-
-@media (max-width: 768px) {
-    .agora-tile {
-        width: 120px;
-        height: 80px;
-    }
+    background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
 }
 
 /* ==================== WARNING BANNER ==================== */
 #unity-warning {
     position: fixed;
-    left: 50%;
-    top: 5%;
+    left: 50%; top: 4%;
     transform: translateX(-50%);
-    background: var(--glass-bg);
+    background: var(--glass-bg-strong);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
     display: none;
     z-index: 2001;
     max-width: 90%;
 }
+#unity-warning > div { padding: var(--sp-sm); border-radius: var(--r-sm); margin-bottom: var(--sp-sm); }
 
-#unity-warning>div {
-    padding: var(--spacing-sm);
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--spacing-sm);
-}
+/* ==================== UTILITY ==================== */
+.hidden { display: none !important; }
+.fade-out { opacity: 0 !important; }
 
-/* ==================== RESPONSIVE DESIGN ==================== */
-@media (max-width: 1366px) {
-    .loading-content {
-        min-width: 350px;
-    }
-
-    .game-title {
-        font-size: 1.5rem;
-    }
-
-    #unity-container.unity-desktop {
-        padding: 70px 15px 70px 15px;
-    }
-}
-
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-    #voice-controls {
-        top: var(--spacing-sm);
-        left: var(--spacing-sm);
-        right: var(--spacing-sm);
-        justify-content: center;
-    }
-
-    .loading-content {
-        min-width: 90%;
-        padding: var(--spacing-lg);
-    }
-
-    .game-title {
-        font-size: 1.25rem;
-    }
-
-    .brand-mark {
-        font-size: 2rem;
-    }
-
-    .brand-tagline {
-        font-size: 0.75rem;
-        letter-spacing: 0.2em;
-    }
-
-    .voice-btn {
-        font-size: 0.875rem;
-        padding: var(--spacing-sm) var(--spacing-md);
-    }
-
-    .gradient-orb {
-        filter: blur(60px);
-    }
-
-    #unity-container.unity-mobile {
-        padding: 60px 5px 5px 5px;
-    }
-
-    #unity-canvas {
-        border-radius: var(--radius-sm);
-    }
+    #voice-controls { top: var(--sp-sm); left: var(--sp-sm); right: var(--sp-sm); flex-wrap: wrap; }
+    .loading-content { min-width: 0; width: 90%; padding: var(--sp-xl) var(--sp-lg); }
+    .brand-mark { font-size: 2.1rem; }
+    .brand-tagline { font-size: 0.7rem; letter-spacing: 0.22em; }
+    .auth-card { padding: var(--sp-xl) var(--sp-lg); }
+    .auth-title { font-size: 1.6rem; }
+    .voice-text, .cam-text, .screen-text { display: none; } /* icons only on mobile */
+    .voice-btn { padding: 0.55rem 0.7rem; }
+    .agora-tile { width: 130px; height: 84px; }
+    .gradient-orb { filter: blur(64px); }
 }
 
 @media (max-width: 480px) {
-    .loading-content {
-        padding: var(--spacing-md);
-    }
-
-    .game-title {
-        font-size: 1.125rem;
-    }
-
-    #loading-percentage {
-        font-size: 1rem;
-    }
-
-    .loading-tip {
-        font-size: 0.75rem;
-    }
-
-    .voice-text {
-        display: none;
-    }
-
-    #voice-controls {
-        padding: var(--spacing-xs);
-    }
-
-    .voice-btn {
-        padding: var(--spacing-sm);
-    }
+    .brand-mark { font-size: 1.8rem; }
+    #loading-percentage { font-size: 0.95rem; }
 }
 
-/* ==================== LANDSCAPE MODE ==================== */
-@media (max-height: 600px) and (orientation: landscape) {
-    #unity-container.unity-desktop {
-        padding: 10px;
-    }
-
-    #unity-footer {
-        height: 50px;
-    }
-
-    #voice-controls {
-        top: 5px;
-        left: 5px;
-    }
-
-    .glass-panel {
-        padding: 4px;
-    }
-
-    .voice-btn {
-        padding: 6px 12px;
-        font-size: 0.875rem;
-    }
-}
-
-/* ==================== ANIMATIONS ==================== */
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-.loading-content {
-    animation: slideInUp 0.6s ease-out;
-}
-
-/* (voice-controls reveal animation now handled by #voice-controls.visible) */
-
-/* ==================== UTILITY CLASSES ==================== */
-.hidden {
-    display: none !important;
-}
-
-.fade-out {
-    opacity: 0 !important;
-}
-
-/* ==================== AUTHENTICATION OVERLAY ==================== */
-.auth-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 3000;
-    display: none;
-    /* Hidden by default, shown after Unity loads */
-    align-items: center;
-    justify-content: center;
-    background: rgba(10, 14, 39, 0.95);
-    backdrop-filter: blur(10px);
-}
-
-.auth-overlay.visible {
-    display: flex;
-    animation: fadeIn 0.6s ease-out;
-}
-
-.auth-overlay.hidden {
-    animation: fadeOut 0.5s ease-out forwards;
-}
-
-@keyframes fadeOut {
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
-        pointer-events: none;
-    }
-}
-
-.auth-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(30px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-xl);
-    box-shadow: var(--shadow-lg);
-    text-align: center;
-    width: 90%;
-    max-width: 450px;
-    animation: slideInUp 0.7s ease-out 0.2s both;
-}
-
-.auth-title {
-    font-size: 2rem;
-    font-weight: 800;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: var(--spacing-sm);
-    letter-spacing: -0.02em;
-}
-
-.auth-subtitle {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-xl);
-    font-weight: 500;
-}
-
-.auth-form {
-    width: 100%;
-    margin-bottom: var(--spacing-md);
-}
-
-.auth-input {
-    width: 100%;
-    padding: var(--spacing-md);
-    border: 2px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-primary);
-    font-size: 1rem;
-    font-family: 'Inter', sans-serif;
-    margin-bottom: var(--spacing-sm);
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-}
-
-.auth-input::placeholder {
-    color: var(--text-secondary);
-    opacity: 0.7;
-}
-
-.auth-input:focus {
-    outline: none;
-    border-color: rgba(102, 126, 234, 0.8);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-}
-
-.auth-toggle-text {
-    text-align: center;
-    margin-top: var(--spacing-sm);
-    margin-bottom: 0;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-.auth-link {
-    color: #667EEA;
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.3s ease;
-    margin-left: 4px;
-}
-
-.auth-link:hover {
-    color: #764BA2;
-    text-decoration: underline;
-}
-
-.auth-divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: var(--spacing-lg) 0;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid var(--glass-border);
-}
-
-.auth-divider span {
-    padding: 0 var(--spacing-md);
-}
-
-
-.auth-btn {
-    width: 100%;
-    padding: var(--spacing-md) var(--spacing-lg);
-    border: 2px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    font-size: 1rem;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-}
-
-.auth-btn.primary {
-    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
-    color: #333;
-    border-color: transparent;
-    box-shadow: var(--shadow-md);
-}
-
-.auth-btn.primary:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-lg), 0 0 30px rgba(255, 255, 255, 0.3);
-}
-
-.auth-btn.secondary {
-    background: var(--glass-bg);
-    color: var(--text-primary);
-    border-color: var(--glass-border);
-}
-
-.auth-btn.secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(102, 126, 234, 0.5);
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-glow);
-}
-
-.auth-btn:active {
-    transform: translateY(-1px);
-}
-
-.google-icon {
-    width: 20px;
-    height: 20px;
-}
-
-/* Responsive Auth */
-@media (max-width: 768px) {
-    .auth-card {
-        padding: var(--spacing-lg);
-        max-width: 90%;
-    }
-
-    .auth-title {
-        font-size: 1.75rem;
-    }
-
-    .auth-subtitle {
-        font-size: 0.875rem;
-    }
-
-    .auth-btn {
-        font-size: 0.875rem;
-        padding: var(--spacing-sm) var(--spacing-md);
-    }
-}
-
-@media (max-width: 480px) {
-    .auth-title {
-        font-size: 1.5rem;
-    }
-
-    .auth-btn {
-        font-size: 0.8125rem;
+/* ==================== REDUCED MOTION ==================== */
+/* Respect users who ask for less motion — disable the looping decorative anims. */
+@media (prefers-reduced-motion: reduce) {
+    .animated-bg::after,
+    .gradient-orb,
+    .brand-veonary,
+    #unity-build-title .brand-veonary,
+    .auth-card::before,
+    #unity-progress-bar-full,
+    .loading-content::before,
+    .loading-orbit::before,
+    .loading-orbit::after,
+    .pulse-animation,
+    .wave-bar,
+    .voice-btn.active {
+        animation: none !important;
     }
 }

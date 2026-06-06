@@ -120,6 +120,7 @@
     <!-- Loading Screen -->
     <div id="unity-loading-bar">
       <div class="loading-content">
+        <div class="loading-orbit"></div>
         <div class="brand-mark pulse-animation">
           <span class="brand-veonary">VEONARY</span><span class="brand-land">LAND</span>
         </div>
@@ -505,6 +506,17 @@
         el.addEventListener('keypress', stopPropagation);
       }
     });
+
+    // Cursor-follow glow on the auth card (purely cosmetic).
+    (function () {
+      var card = document.querySelector('.auth-card');
+      if (!card) return;
+      card.addEventListener('pointermove', function (e) {
+        var r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+    })();
 
     // Helper to construct user data and check admin status
     // Helper to construct user data and check admin status
