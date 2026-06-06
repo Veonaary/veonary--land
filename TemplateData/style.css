@@ -12,6 +12,9 @@
     --accent-2: #b07bff;   /* violet  */
     --accent-3: #4fd0ff;   /* cyan    */
     --grad-accent: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 60%, var(--accent-3) 120%);
+    /* Darker gradient for SOLID buttons so white text stays readable
+       (the bright accent gradient is for accents/text, not button fills). */
+    --grad-btn: linear-gradient(135deg, #5b4fd6 0%, #7d4fd6 100%);
 
     --bg-0: #07080f;       /* deepest */
     --bg-1: #0b0d1a;
@@ -116,6 +119,48 @@ body {
 @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(60px,40px) scale(1.12); } }
 @keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-50px,-30px) scale(0.92); } }
 @keyframes float3 { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-46%,-56%) scale(1.1); } }
+
+/* ---- Starfield: two layers of scattered dots, slow parallax drift + twinkle.
+   Pure CSS (radial-gradients), GPU-friendly. Fills the empty space behind the
+   game canvas so the lobby never looks flat. ---- */
+.animated-bg .stars,
+.animated-bg .stars2 {
+    position: absolute;
+    inset: -100px;
+    background-repeat: repeat;
+    will-change: transform, opacity;
+}
+.animated-bg .stars {
+    background-image:
+        radial-gradient(1.5px 1.5px at 20px 30px, rgba(255,255,255,0.9), transparent),
+        radial-gradient(1.5px 1.5px at 120px 80px, rgba(180,200,255,0.8), transparent),
+        radial-gradient(1px 1px at 200px 160px, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1.5px 1.5px at 300px 60px, rgba(200,180,255,0.8), transparent),
+        radial-gradient(1px 1px at 360px 220px, rgba(255,255,255,0.6), transparent);
+    background-size: 400px 300px;
+    animation: starDrift 90s linear infinite, twinkle 5s ease-in-out infinite;
+    opacity: 0.5;
+}
+.animated-bg .stars2 {
+    background-image:
+        radial-gradient(1px 1px at 60px 120px, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1px 1px at 180px 40px, rgba(180,210,255,0.6), transparent),
+        radial-gradient(1px 1px at 260px 200px, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1px 1px at 340px 140px, rgba(210,190,255,0.6), transparent);
+    background-size: 500px 380px;
+    animation: starDrift 140s linear infinite reverse, twinkle 7s ease-in-out infinite 1s;
+    opacity: 0.35;
+}
+@keyframes starDrift { from { transform: translateY(0); } to { transform: translateY(-300px); } }
+@keyframes twinkle  { 0%,100% { opacity: 0.5; } 50% { opacity: 0.25; } }
+
+/* A soft vignette so edges feel deliberate, not just dark. */
+.animated-bg .vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 45%, transparent 55%, rgba(0,0,0,0.45) 100%);
+}
 
 /* ==================== UNITY CONTAINER / CANVAS ==================== */
 #unity-container {
@@ -416,16 +461,17 @@ body {
 .auth-btn:active { transform: translateY(0) scale(0.99); }
 
 .auth-btn.primary {
-    background: var(--grad-accent);
-    background-size: 180% auto;
+    background: var(--grad-btn);
+    background-size: 160% auto;
     color: #fff;
     border-color: transparent;
-    box-shadow: 0 6px 20px rgba(123, 111, 245, 0.35);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); /* keep label crisp on the fill */
+    box-shadow: 0 6px 20px rgba(91, 79, 214, 0.4);
 }
 .auth-btn.primary:hover {
     transform: translateY(-2px);
     background-position: right center;
-    box-shadow: 0 10px 30px rgba(123, 111, 245, 0.5), var(--glow);
+    box-shadow: 0 10px 30px rgba(91, 79, 214, 0.55), var(--glow);
 }
 .auth-btn.secondary {
     background: var(--glass-bg);
@@ -491,60 +537,82 @@ body {
 .voice-btn {
     display: flex;
     align-items: center;
-    gap: var(--sp-sm);
-    padding: 0.55rem 1rem;
-    background: rgba(255, 255, 255, 0.04);
+    gap: 0.55rem;
+    padding: 0.5rem 1.05rem 0.5rem 0.6rem;
+    background: rgba(255, 255, 255, 0.045);
     border: 1px solid var(--glass-border);
-    border-radius: var(--r-sm);
+    border-radius: var(--r-full);          /* pill shape */
     color: var(--text-1);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
     transition: transform 0.16s var(--ease), background 0.16s var(--ease), border-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
     white-space: nowrap;
 }
+/* icon sits in its own soft chip — gives the button a polished, app-like look */
+.voice-btn svg {
+    width: 18px; height: 18px;
+    padding: 5px;
+    box-sizing: content-box;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 50%;
+    transition: transform 0.16s var(--ease), background 0.16s var(--ease);
+    flex: none;
+}
 .voice-btn:hover {
     transform: translateY(-1px);
     background: var(--glass-bg-strong);
-    border-color: rgba(123, 111, 245, 0.5);
+    border-color: rgba(123, 111, 245, 0.45);
     box-shadow: var(--glow);
 }
+.voice-btn:hover svg { transform: scale(1.08); }
 .voice-btn:active { transform: translateY(0) scale(0.98); }
-.voice-btn svg { transition: transform 0.16s var(--ease); }
-.voice-btn:hover svg { transform: scale(1.12); }
 
-/* active = mic/cam/screen on → filled accent */
+/* active = mic/cam/screen on → filled accent (darker fill = readable text) */
 .voice-btn.active {
-    background: var(--grad-accent);
-    background-size: 180% auto;
+    background: var(--grad-btn);
+    background-size: 160% auto;
     border-color: transparent;
     color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     box-shadow: var(--glow);
-    animation: hueShift 6s linear infinite;
 }
+.voice-btn.active svg { background: rgba(255, 255, 255, 0.18); }
 
-/* voice level wave */
+/* ---- "mic is LIVE" indicator: a clean pulsing dot + label, not bars ---- */
 .voice-indicator {
     display: none;
-    align-items: flex-end;
-    gap: 3px;
-    padding: 0 var(--sp-sm);
-    height: 26px;
-}
-.voice-indicator.active { display: flex; }
-.wave-bar {
-    width: 3px;
-    height: 8px;
-    background: var(--grad-accent);
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.8rem 0.4rem 0.6rem;
     border-radius: var(--r-full);
-    animation: wave 1s ease-in-out infinite;
+    background: rgba(56, 211, 159, 0.12);
+    border: 1px solid rgba(56, 211, 159, 0.35);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ok);
+    text-transform: uppercase;
 }
-.wave-bar:nth-child(1) { animation-delay: 0s; }
-.wave-bar:nth-child(2) { animation-delay: 0.15s; }
-.wave-bar:nth-child(3) { animation-delay: 0.3s; }
-.wave-bar:nth-child(4) { animation-delay: 0.45s; }
-@keyframes wave { 0%,100% { height: 8px; } 50% { height: 22px; } }
+.voice-indicator.active { display: inline-flex; animation: dockIn 0.3s var(--ease); }
+.voice-indicator::after { content: "LIVE"; }
+/* pulsing dot (each .wave-bar element is reused as the dot / its rings — but we
+   only need one visual dot, so style the first and hide the rest) */
+.wave-bar {
+    position: relative;
+    width: 9px; height: 9px;
+    background: var(--ok);
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(56, 211, 159, 0.6);
+    animation: livePulse 1.6s ease-out infinite;
+}
+.wave-bar:nth-child(n+2) { display: none; } /* keep markup, show one dot */
+@keyframes livePulse {
+    0%   { box-shadow: 0 0 0 0 rgba(56, 211, 159, 0.55); }
+    70%  { box-shadow: 0 0 0 9px rgba(56, 211, 159, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(56, 211, 159, 0); }
+}
 
 /* ==================== FOOTER ==================== */
 #unity-footer {
@@ -668,6 +736,8 @@ body {
 /* Respect users who ask for less motion — disable the looping decorative anims. */
 @media (prefers-reduced-motion: reduce) {
     .animated-bg::after,
+    .animated-bg .stars,
+    .animated-bg .stars2,
     .gradient-orb,
     .brand-veonary,
     #unity-build-title .brand-veonary,
