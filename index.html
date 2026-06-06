@@ -18,18 +18,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
-  <!-- Agora Web SDK (voice/video/screen-share). Used by AgoraBridge.jslib.
-       Served from our OWN origin (TemplateData/) so Vercel/CORS can't block it —
-       loading it from Agora's CDN was being rejected with a CORS error. Download
-       the SDK once and place it next to this file (see note below). -->
-  <script src="TemplateData/AgoraRTC_N-4.20.0.js"></script>
-  <script>
-    // Cloud Function that mints short-lived Agora tokens. AgoraBridge.jslib reads
-    // this; kept here (not baked into the build) so the URL can change without a
-    // rebuild. The function verifies the caller's Firebase ID token server-side.
-    window.AGORA_TOKEN_URL = "https://agoratoken-heuewrvndq-uc.a.run.app";
-  </script>
-
   <script>
     // Your copied config
     const firebaseConfig = {
@@ -172,65 +160,7 @@
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
     </div>
-
-    <!-- Camera toggle. Disabled until voice is enabled (must be in the channel). -->
-    <button id="cameraBtn" class="voice-btn" title="Turn Camera On" disabled>
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M23 7l-7 5 7 5V7z" />
-        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-      </svg>
-      <span class="cam-text">Camera</span>
-    </button>
   </div>
-
-  <!-- Floating camera tiles (bottom-right). Populated by AgoraBridge.jslib. -->
-  <div id="agora-tiles"></div>
-
-  <style>
-    /* Floating camera tiles, stacked upward from the bottom-right corner. */
-    #agora-tiles {
-      position: fixed;
-      right: 16px;
-      bottom: 96px;            /* sit above the voice/camera control bar */
-      display: flex;
-      flex-direction: column-reverse; /* newest tiles stack upward */
-      gap: 10px;
-      z-index: 50;
-      pointer-events: none;    /* tiles don't block game clicks */
-    }
-    .agora-tile {
-      width: 180px;
-      height: 135px;           /* 4:3 video */
-      border-radius: 12px;
-      overflow: hidden;
-      background: #0b0d14;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      position: relative;
-    }
-    .agora-tile-video {
-      width: 100%;
-      height: 100%;
-      background: #0b0d14;
-    }
-    /* Agora injects its own <video>; make sure it fills the tile. */
-    .agora-tile-video video {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover !important;
-    }
-    .agora-tile-label {
-      position: absolute;
-      left: 8px;
-      bottom: 6px;
-      padding: 2px 8px;
-      font: 600 12px/1.4 'Inter', sans-serif;
-      color: #fff;
-      background: rgba(0, 0, 0, 0.55);
-      border-radius: 6px;
-      pointer-events: none;
-    }
-  </style>
 
   <!-- Firebase Stub -->
   <script>
@@ -383,10 +313,6 @@
           btn.querySelector('.voice-text').textContent = "Mute Mic";
           indicator.classList.add('active');
           console.log("[Voice] Enabled via user gesture");
-
-          // Camera needs an active channel — unlock the camera button now.
-          var camBtn = document.getElementById("cameraBtn");
-          if (camBtn) camBtn.disabled = false;
         } else {
           // Interaction: Toggle Mute
           isMuted = !isMuted;
@@ -402,33 +328,6 @@
             indicator.style.opacity = "1";
           }
         }
-      };
-    })();
-  </script>
-
-  <!-- Camera Button Handler -->
-  <script>
-    (function () {
-      const camBtn = document.getElementById("cameraBtn");
-      if (!camBtn) return;
-      let camOn = false;
-
-      camBtn.onclick = function () {
-        if (!window.unityInstance || camBtn.disabled) return;
-
-        camOn = !camOn;
-        window.unityInstance.SendMessage("VoiceManager", "SetCamera", camOn ? 1 : 0);
-
-        if (camOn) {
-          camBtn.classList.add('active');
-          camBtn.querySelector('.cam-text').textContent = "Camera On";
-          camBtn.title = "Turn Camera Off";
-        } else {
-          camBtn.classList.remove('active');
-          camBtn.querySelector('.cam-text').textContent = "Camera";
-          camBtn.title = "Turn Camera On";
-        }
-        console.log("[Camera] Toggled:", camOn);
       };
     })();
   </script>
@@ -564,6 +463,9 @@
         return;
       }
 
+      if (window.__authInProgress) { console.log('[Auth] Sign-in already in progress — ignoring extra click'); return; }
+      window.__authInProgress = true;
+
       if (isSignUpMode) {
         // Sign Up
         console.log('[Auth] Email Sign Up clicked');
@@ -573,6 +475,7 @@
             processUserAndSend(result.user);
           })
           .catch(function (error) {
+            window.__authInProgress = false;
             console.error('[Auth] Sign up failed:', error);
             alert('Sign up failed: ' + error.message);
           });
@@ -585,6 +488,7 @@
             processUserAndSend(result.user);
           })
           .catch(function (error) {
+            window.__authInProgress = false;
             console.error('[Auth] Email sign-in failed:', error);
             alert('Sign in failed: ' + error.message);
           });
@@ -593,6 +497,9 @@
 
     // Google Sign In Button
     document.getElementById('googleSignInBtn').onclick = function () {
+      if (window.__authInProgress) { console.log('[Auth] Sign-in already in progress — ignoring extra click'); return; }
+      window.__authInProgress = true;
+
       console.log('[Auth] Google Sign In clicked');
 
       var provider = new firebase.auth.GoogleAuthProvider();
@@ -600,6 +507,7 @@
         console.log('[Auth] Google sign-in successful');
         processUserAndSend(result.user);
       }).catch(function (error) {
+        window.__authInProgress = false;
         console.error('[Auth] Google sign-in failed:', error);
         alert('Sign in failed: ' + error.message);
       });
@@ -607,12 +515,19 @@
 
     // Guest Sign In Button
     document.getElementById('guestSignInBtn').onclick = function () {
+      // Guard: ignore repeat clicks while a sign-in is already in progress, so
+      // a fast double/triple click can't fire multiple logins (each of which
+      // would re-send OnLoginSuccess and re-connect Photon).
+      if (window.__authInProgress) { console.log('[Auth] Sign-in already in progress — ignoring extra click'); return; }
+      window.__authInProgress = true;
+
       console.log('[Auth] Guest Sign In clicked');
 
       firebase.auth().signInAnonymously().then(function (result) {
         console.log('[Auth] Guest sign-in successful');
         processUserAndSend(result.user);
       }).catch(function (error) {
+        window.__authInProgress = false; // allow retry on failure
         console.error('[Auth] Guest sign-in failed:', error);
         alert('Sign in failed: ' + error.message);
       });
