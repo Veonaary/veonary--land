@@ -174,6 +174,17 @@
       <span class="cam-text">Camera</span>
     </button>
 
+    <!-- Screen share: admin-only, hidden until an admin signs in. -->
+    <button id="screenBtn" class="voice-btn" title="Share Screen" style="display:none;">
+      <svg class="screen-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+        <line x1="8" y1="21" x2="16" y2="21" />
+        <line x1="12" y1="17" x2="12" y2="21" />
+      </svg>
+      <span class="screen-text">Share Screen</span>
+    </button>
+
     <div class="voice-indicator" id="voiceIndicator">
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
@@ -271,9 +282,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/add033019178de762e466f140cfe7a95.data.unityweb",
-      frameworkUrl: buildUrl + "/d78119b0042453a2a84224e86d16c971.framework.js.unityweb",
-      codeUrl: buildUrl + "/1b9f48ff9f0510fe8ea7bde5dd308df6.wasm.unityweb",
+      dataUrl: buildUrl + "/57026bd7152f4692a85ad0f9f783c11e.data.unityweb",
+      frameworkUrl: buildUrl + "/f2b67134b2e2d73c99eaa4d84adaad1f.framework.js.unityweb",
+      codeUrl: buildUrl + "/9b451f2cf38d185924c4b949d89bc912.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
@@ -333,6 +344,7 @@
           window.unityInstance.SendMessage("VoiceManager", "StartVoice");
 
           enabled = true;
+          window.__voiceEnabled = true; // shared so the camera button can check
           btn.classList.add('active');
           btn.querySelector('.voice-text').textContent = "Mute Mic";
           indicator.classList.add('active');
@@ -366,9 +378,27 @@
       camBtn.onclick = function () {
         if (!window.unityInstance) return;
 
-        // Camera requires being in the Agora channel — that happens when voice
-        // is enabled. AgoraVoiceManager.SetCamera logs a warning and no-ops if
-        // not in a channel yet, so prompt the user to enable voice first.
+        // Camera needs the Agora channel joined. If voice isn't enabled yet,
+        // enable it from THIS same click gesture so the channel joins and the
+        // mic publishes — then request the camera. (Browsers grant camera
+        // permission most reliably when the request originates from a user
+        // gesture; piggybacking on this click avoids the camera silently
+        // failing to prompt.)
+        if (!window.__voiceEnabled) {
+          unlockAudioContext();
+          window.unityInstance.SendMessage("VoiceManager", "StartVoice");
+          window.__voiceEnabled = true;
+          // Reflect voice-on state on the voice button too.
+          var vb = document.getElementById("voiceBtn");
+          if (vb) {
+            vb.classList.add('active');
+            var vt = vb.querySelector('.voice-text'); if (vt) vt.textContent = "Mute Mic";
+          }
+          var ind = document.getElementById("voiceIndicator");
+          if (ind) ind.classList.add('active');
+          console.log("[Voice] Enabled via camera button gesture");
+        }
+
         camOn = !camOn;
         window.unityInstance.SendMessage("VoiceManager", "SetCamera", camOn ? 1 : 0);
 
@@ -380,6 +410,47 @@
           camBtn.querySelector('.cam-text').textContent = "Camera";
         }
         console.log("[Camera] Button toggled:", camOn);
+      };
+    })();
+  </script>
+
+  <!-- Screen Share Button Handler (admin only) -->
+  <script>
+    (function () {
+      const screenBtn = document.getElementById("screenBtn");
+      if (!screenBtn) return;
+      let sharing = false;
+
+      screenBtn.onclick = function () {
+        if (!window.unityInstance) return;
+        if (!window.__isAdmin) { console.warn("[Screen] Admin only."); return; }
+
+        // Enable voice from this gesture if not already (same as camera), so the
+        // channel is joined and the OS screen picker opens reliably.
+        if (!window.__voiceEnabled) {
+          unlockAudioContext();
+          window.unityInstance.SendMessage("VoiceManager", "StartVoice");
+          window.__voiceEnabled = true;
+          var vb = document.getElementById("voiceBtn");
+          if (vb) {
+            vb.classList.add('active');
+            var vt = vb.querySelector('.voice-text'); if (vt) vt.textContent = "Mute Mic";
+          }
+          var ind = document.getElementById("voiceIndicator");
+          if (ind) ind.classList.add('active');
+        }
+
+        sharing = !sharing;
+        window.unityInstance.SendMessage("VoiceManager", "SetScreen", sharing ? 1 : 0);
+
+        if (sharing) {
+          screenBtn.classList.add('active');
+          screenBtn.querySelector('.screen-text').textContent = "Stop Sharing";
+        } else {
+          screenBtn.classList.remove('active');
+          screenBtn.querySelector('.screen-text').textContent = "Share Screen";
+        }
+        console.log("[Screen] Button toggled:", sharing);
       };
     })();
   </script>
@@ -465,6 +536,13 @@
         .then(function (snap) {
           userDataObj.isAdmin = snap.exists() && snap.val() === true;
           console.log('[Auth] isAdmin =', userDataObj.isAdmin);
+
+          // Reveal the admin-only screen-share button.
+          window.__isAdmin = userDataObj.isAdmin;
+          if (userDataObj.isAdmin) {
+            var sb = document.getElementById('screenBtn');
+            if (sb) sb.style.display = '';
+          }
 
           var finalJson = JSON.stringify(userDataObj);
           window.hideAuthOverlay();
