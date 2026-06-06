@@ -80,8 +80,9 @@ body {
     z-index: 0;
     overflow: hidden;
     background:
-        radial-gradient(1200px 800px at 15% -10%, #161a38 0%, transparent 60%),
-        radial-gradient(1000px 700px at 110% 120%, #1a1430 0%, transparent 55%),
+        radial-gradient(1100px 760px at 12% -8%,  rgba(86, 76, 200, 0.40) 0%, transparent 58%),
+        radial-gradient(1000px 720px at 112% 118%, rgba(120, 70, 190, 0.42) 0%, transparent 55%),
+        radial-gradient(820px 640px  at 88% 6%,    rgba(45, 130, 190, 0.22) 0%, transparent 55%),
         linear-gradient(160deg, var(--bg-1) 0%, var(--bg-0) 100%);
 }
 
@@ -91,9 +92,9 @@ body {
     position: absolute;
     inset: -50%;
     background-image:
-        linear-gradient(rgba(123, 111, 245, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(123, 111, 245, 0.06) 1px, transparent 1px);
-    background-size: 46px 46px;
+        linear-gradient(rgba(123, 111, 245, 0.10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(123, 111, 245, 0.10) 1px, transparent 1px);
+    background-size: 48px 48px;
     mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 70%);
     -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 70%);
     animation: gridDrift 30s linear infinite;
@@ -108,13 +109,13 @@ body {
 .gradient-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(90px);
-    opacity: 0.45;
+    filter: blur(80px);
+    opacity: 0.6;
     will-change: transform;
 }
-.orb-1 { width: 520px; height: 520px; background: radial-gradient(circle, var(--accent-1), transparent 70%); top: -12%; left: -8%; animation: float1 24s ease-in-out infinite; }
-.orb-2 { width: 440px; height: 440px; background: radial-gradient(circle, var(--accent-2), transparent 70%); bottom: -14%; right: -10%; animation: float2 28s ease-in-out infinite; }
-.orb-3 { width: 380px; height: 380px; background: radial-gradient(circle, var(--accent-3), transparent 70%); top: 45%; left: 55%; opacity: 0.3; animation: float3 32s ease-in-out infinite; }
+.orb-1 { width: 560px; height: 560px; background: radial-gradient(circle, var(--accent-1), transparent 70%); top: -14%; left: -10%; animation: float1 24s ease-in-out infinite; }
+.orb-2 { width: 480px; height: 480px; background: radial-gradient(circle, var(--accent-2), transparent 70%); bottom: -16%; right: -12%; animation: float2 28s ease-in-out infinite; }
+.orb-3 { width: 420px; height: 420px; background: radial-gradient(circle, var(--accent-3), transparent 70%); top: 42%; left: 50%; opacity: 0.42; animation: float3 32s ease-in-out infinite; }
 
 @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(60px,40px) scale(1.12); } }
 @keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-50px,-30px) scale(0.92); } }
@@ -139,7 +140,7 @@ body {
         radial-gradient(1px 1px at 360px 220px, rgba(255,255,255,0.6), transparent);
     background-size: 400px 300px;
     animation: starDrift 90s linear infinite, twinkle 5s ease-in-out infinite;
-    opacity: 0.5;
+    opacity: 0.85;
 }
 .animated-bg .stars2 {
     background-image:
@@ -149,10 +150,10 @@ body {
         radial-gradient(1px 1px at 340px 140px, rgba(210,190,255,0.6), transparent);
     background-size: 500px 380px;
     animation: starDrift 140s linear infinite reverse, twinkle 7s ease-in-out infinite 1s;
-    opacity: 0.35;
+    opacity: 0.6;
 }
 @keyframes starDrift { from { transform: translateY(0); } to { transform: translateY(-300px); } }
-@keyframes twinkle  { 0%,100% { opacity: 0.5; } 50% { opacity: 0.25; } }
+@keyframes twinkle  { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
 
 /* A soft vignette so edges feel deliberate, not just dark. */
 .animated-bg .vignette {
@@ -177,7 +178,14 @@ body {
 #unity-canvas {
     background: var(--bg-2);
     border-radius: var(--r-lg);
-    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.05);
+    /* Framed, glowing edge so the canvas reads as a premium "window" into the
+       world rather than a dark rectangle floating in empty space. */
+    border: 1px solid rgba(123, 111, 245, 0.25);
+    box-shadow:
+        var(--shadow-lg),
+        0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0 50px rgba(123, 111, 245, 0.22),
+        0 0 120px rgba(79, 208, 255, 0.10);
     display: block;
     max-width: 100%;
     max-height: 100%;
