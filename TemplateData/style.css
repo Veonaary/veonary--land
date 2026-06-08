@@ -532,15 +532,21 @@ body {
 /* ==================== TOP-LEFT CONTROL DOCK (voice/cam/screen) ==================== */
 #voice-controls {
     position: fixed;
-    top: var(--sp-md);
-    left: var(--sp-md);
+    bottom: calc(var(--sp-lg) + 8px);
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 1000;
     display: none; /* shown by JS when in the game scene */
     align-items: center;
+    justify-content: center;
     gap: var(--sp-sm);
 }
 #voice-controls.visible { display: flex; animation: dockIn 0.45s var(--ease); }
-@keyframes dockIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+/* Slide up from the bottom into the centered dock (Zoom/Meet style). */
+@keyframes dockIn {
+    from { opacity: 0; transform: translate(-50%, 16px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
 
 .glass-panel {
     background: var(--glass-bg);
@@ -809,7 +815,7 @@ body {
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-    #voice-controls { top: var(--sp-sm); left: var(--sp-sm); right: var(--sp-sm); flex-wrap: wrap; }
+    #voice-controls { bottom: var(--sp-sm); left: 50%; transform: translateX(-50%); flex-wrap: nowrap; }
     .loading-content { min-width: 0; width: 90%; padding: var(--sp-xl) var(--sp-lg); }
     .brand-mark { font-size: 2.1rem; }
     .brand-tagline { font-size: 0.7rem; letter-spacing: 0.22em; }
