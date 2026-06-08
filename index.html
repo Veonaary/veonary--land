@@ -510,22 +510,28 @@
     // Track whether we're in Sign In or Sign Up mode
     var isSignUpMode = false;
 
-    // FIX: Prevent Unity from capturing keyboard input when typing in fields
-    function stopPropagation(e) {
-      e.stopPropagation();
+    // FIX: Prevent Unity from swallowing keyboard input while the user is typing
+    // in an HTML field (login/signup). Unity installs document-level key
+    // listeners that call preventDefault() on every key, which stops characters
+    // from being entered into <input> elements.
+    //
+    // A capture-phase listener on `window` runs BEFORE Unity's document-level
+    // listener (window is the outermost ancestor in capture order). When the
+    // focused element is a text field, we stopImmediatePropagation() so the
+    // event never reaches Unity — but we deliberately do NOT preventDefault(),
+    // so the character is still typed into the field normally.
+    function isEditableTarget(t) {
+      if (!t) return false;
+      var tag = t.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || t.isContentEditable === true;
     }
-
-    const inputIds = ['authEmail', 'authPassword'];
-    inputIds.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        // Use capture phase so we stop the event before it bubbles/reaches any
-        // document-level Unity listener. Combined with disabling
-        // captureAllKeyboardInput above, this guarantees typing reaches the field.
-        el.addEventListener('keydown', stopPropagation, true);
-        el.addEventListener('keyup', stopPropagation, true);
-        el.addEventListener('keypress', stopPropagation, true);
+    function guardKeyboardForInputs(e) {
+      if (isEditableTarget(e.target)) {
+        e.stopImmediatePropagation();
       }
+    }
+    ['keydown', 'keyup', 'keypress'].forEach(function (type) {
+      window.addEventListener(type, guardKeyboardForInputs, true);
     });
 
     // Cursor-follow glow on the auth card (purely cosmetic).
