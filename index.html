@@ -308,6 +308,21 @@
       }).then(function (unityInstance) {
         window.unityInstance = unityInstance;
 
+        // CRITICAL: Stop Unity from grabbing ALL keyboard input at the document
+        // level. While captureAllKeyboardInput is true (the Unity default), the
+        // engine installs document-wide key listeners that preventDefault() every
+        // keystroke, so HTML <input> fields (e.g. the login form) never receive
+        // characters. Turning it off makes Unity only listen while its own canvas
+        // is focused, letting the auth inputs work normally.
+        try {
+          if (unityInstance.Module && unityInstance.Module.WebGLInput) {
+            unityInstance.Module.WebGLInput.captureAllKeyboardInput = false;
+            console.log('[Auth] Disabled Unity captureAllKeyboardInput so login inputs work');
+          }
+        } catch (e) {
+          console.warn('[Auth] Could not disable captureAllKeyboardInput:', e);
+        }
+
         // Fade out loading screen
         loadingBar.classList.add('fade-out');
         setTimeout(() => {
@@ -504,9 +519,12 @@
     inputIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.addEventListener('keydown', stopPropagation);
-        el.addEventListener('keyup', stopPropagation);
-        el.addEventListener('keypress', stopPropagation);
+        // Use capture phase so we stop the event before it bubbles/reaches any
+        // document-level Unity listener. Combined with disabling
+        // captureAllKeyboardInput above, this guarantees typing reaches the field.
+        el.addEventListener('keydown', stopPropagation, true);
+        el.addEventListener('keyup', stopPropagation, true);
+        el.addEventListener('keypress', stopPropagation, true);
       }
     });
 

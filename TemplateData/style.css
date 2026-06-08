@@ -172,8 +172,8 @@ body {
     justify-content: center;
     z-index: 1;
 }
-#unity-container.unity-desktop { padding: 76px 20px; }
-#unity-container.unity-mobile  { padding: 64px 8px 8px; }
+#unity-container.unity-desktop { padding: 24px; }
+#unity-container.unity-mobile  { padding: 56px 4px 4px; }
 
 #unity-canvas {
     background: var(--bg-2);
@@ -187,11 +187,17 @@ body {
         0 0 50px rgba(123, 111, 245, 0.22),
         0 0 120px rgba(79, 208, 255, 0.10);
     display: block;
+    /* Fill the available space as a large 16:9 widescreen view. The build's
+       intrinsic canvas size may be square, but we override the layout box so
+       the game presents as a big rectangle instead of a small square.
+       Sized to the largest 16:9 box that fits the padded container:
+       width is capped by viewport width, height by viewport height. */
+    aspect-ratio: 16 / 9;
+    width: min(100%, calc((100vh - 48px) * 16 / 9)) !important;
+    height: auto !important;
     max-width: 100%;
     max-height: 100%;
-    width: auto !important;
-    height: auto !important;
-    object-fit: contain;
+    object-fit: cover;
 }
 .unity-mobile #unity-canvas { border-radius: var(--r-md); }
 
