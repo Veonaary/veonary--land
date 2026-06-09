@@ -478,6 +478,41 @@ body {
 }
 .auth-btn:active { transform: translateY(0) scale(0.99); }
 
+/* Loading / busy state: dim the button, hide the label, and show a spinner.
+   Applied while a sign-in is in flight so the click clearly registers. */
+.auth-btn.is-loading {
+    color: transparent !important;
+    text-shadow: none !important;
+    pointer-events: none;
+    cursor: default;
+}
+.auth-btn.is-loading > * { visibility: hidden; }
+.auth-btn.is-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 18px;
+    margin: -9px 0 0 -9px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: auth-spin 0.7s linear infinite;
+}
+/* Secondary (guest) button is light, so use a dark spinner for contrast. */
+.auth-btn.secondary.is-loading::after {
+    border-color: rgba(123, 111, 245, 0.3);
+    border-top-color: var(--accent-2);
+}
+/* Disable the other auth buttons while one is busy. */
+.auth-btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: default;
+}
+@keyframes auth-spin { to { transform: rotate(360deg); } }
+
 .auth-btn.primary {
     background: var(--grad-btn);
     background-size: 160% auto;

@@ -296,7 +296,7 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/98a59a08066806a94877bb522a25c45e.data.unityweb",
+      dataUrl: buildUrl + "/c2cb9ed7a851c6fe159491f2c2e4857a.data.unityweb",
       frameworkUrl: buildUrl + "/01f6dc0fd5a4107cb9c0a5ba21bd70fa.framework.js.unityweb",
       codeUrl: buildUrl + "/9c68c28df77a6463fcbd63bc4154e252.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
@@ -648,6 +648,25 @@
       }
     };
 
+    // Visual feedback helper: show a spinner on the clicked button and disable
+    // all auth buttons so the user can see the click registered. Pass null to
+    // clear (on failure) and re-enable everything.
+    function setAuthBusy(activeBtn) {
+      var btns = document.querySelectorAll('.auth-btn');
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.remove('is-loading');
+        if (activeBtn) {
+          if (btns[i] === activeBtn) {
+            btns[i].classList.add('is-loading');
+          } else {
+            btns[i].disabled = true;
+          }
+        } else {
+          btns[i].disabled = false;
+        }
+      }
+    }
+
     // Email/Password Authentication Button
     document.getElementById('emailAuthBtn').onclick = function () {
       const email = document.getElementById('authEmail').value.trim();
@@ -660,6 +679,7 @@
 
       if (window.__authInProgress) { console.log('[Auth] Sign-in already in progress — ignoring extra click'); return; }
       window.__authInProgress = true;
+      setAuthBusy(this);
 
       if (isSignUpMode) {
         // Sign Up
@@ -671,6 +691,7 @@
           })
           .catch(function (error) {
             window.__authInProgress = false;
+            setAuthBusy(null);
             console.error('[Auth] Sign up failed:', error);
             alert('Sign up failed: ' + error.message);
           });
