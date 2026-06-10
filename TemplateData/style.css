@@ -172,8 +172,8 @@ body {
     justify-content: center;
     z-index: 1;
 }
-#unity-container.unity-desktop { padding: 24px; }
-#unity-container.unity-mobile  { padding: 56px 4px 4px; }
+#unity-container.unity-desktop { padding: 76px 20px; }
+#unity-container.unity-mobile  { padding: 64px 8px 8px; }
 
 #unity-canvas {
     background: var(--bg-2);
@@ -187,20 +187,11 @@ body {
         0 0 50px rgba(123, 111, 245, 0.22),
         0 0 120px rgba(79, 208, 255, 0.10);
     display: block;
-    /* Fill the available space as a large 16:9 widescreen view. The build's
-       intrinsic canvas size may be square, but we override the layout box so
-       the game presents as a big rectangle instead of a small square.
-       Sized to the largest 16:9 box that fits the padded container:
-       width is capped by viewport width, height by viewport height. */
-    aspect-ratio: 16 / 9;
-    /* Cap the height a little below the full viewport so the gameplay view
-       isn't overwhelmingly tall, while width is driven by the 16:9 ratio so it
-       stays a wide rectangle and uses the horizontal space. */
-    width: min(100%, calc(82vh * 16 / 9)) !important;
-    height: auto !important;
     max-width: 100%;
-    max-height: 82vh;
-    object-fit: cover;
+    max-height: 100%;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain;
 }
 .unity-mobile #unity-canvas { border-radius: var(--r-md); }
 
@@ -280,12 +271,11 @@ body {
 
 /* ---- VEONARYLAND wordmark ---- */
 .brand-mark {
-    font-size: 4rem;
+    font-size: 2.7rem;
     font-weight: 800;
     letter-spacing: 0.04em;
     line-height: 1;
-    margin-bottom: var(--sp-md);
-    text-align: center;
+    margin-bottom: var(--sp-sm);
     user-select: none;
 }
 .brand-veonary {
@@ -360,6 +350,26 @@ body {
     animation: tipFade 0.6s var(--ease);
 }
 @keyframes tipFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 0.85; transform: none; } }
+
+/* ==================== SCENE COVER (entering world) ==================== */
+/* Same cinematic look as the loading screen; sits above the canvas while the
+   GameScene loads + the player spawns, so the empty default camera view is
+   never shown. Hidden (faded) by CameraController once it's following the player. */
+#scene-cover {
+    position: fixed;
+    inset: 0;
+    z-index: 2500; /* above canvas + voice dock, below auth overlay */
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(900px 600px at 50% 40%, rgba(123,111,245,0.12), transparent 70%),
+        var(--bg-0);
+    transition: opacity 0.5s var(--ease);
+}
+#scene-cover .loading-orbit { margin-bottom: var(--sp-lg); }
+#scene-cover.hide { opacity: 0; pointer-events: none; }
 
 /* ==================== AUTH OVERLAY ==================== */
 .auth-overlay {
@@ -478,41 +488,6 @@ body {
 }
 .auth-btn:active { transform: translateY(0) scale(0.99); }
 
-/* Loading / busy state: dim the button, hide the label, and show a spinner.
-   Applied while a sign-in is in flight so the click clearly registers. */
-.auth-btn.is-loading {
-    color: transparent !important;
-    text-shadow: none !important;
-    pointer-events: none;
-    cursor: default;
-}
-.auth-btn.is-loading > * { visibility: hidden; }
-.auth-btn.is-loading::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 18px;
-    height: 18px;
-    margin: -9px 0 0 -9px;
-    border: 2px solid rgba(255, 255, 255, 0.35);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: auth-spin 0.7s linear infinite;
-}
-/* Secondary (guest) button is light, so use a dark spinner for contrast. */
-.auth-btn.secondary.is-loading::after {
-    border-color: rgba(123, 111, 245, 0.3);
-    border-top-color: var(--accent-2);
-}
-/* Disable the other auth buttons while one is busy. */
-.auth-btn:disabled {
-    opacity: 0.5;
-    pointer-events: none;
-    cursor: default;
-}
-@keyframes auth-spin { to { transform: rotate(360deg); } }
-
 .auth-btn.primary {
     background: var(--grad-btn);
     background-size: 160% auto;
@@ -567,21 +542,15 @@ body {
 /* ==================== TOP-LEFT CONTROL DOCK (voice/cam/screen) ==================== */
 #voice-controls {
     position: fixed;
-    bottom: calc(var(--sp-lg) + 8px);
-    left: 50%;
-    transform: translateX(-50%);
+    top: var(--sp-md);
+    left: var(--sp-md);
     z-index: 1000;
     display: none; /* shown by JS when in the game scene */
     align-items: center;
-    justify-content: center;
     gap: var(--sp-sm);
 }
 #voice-controls.visible { display: flex; animation: dockIn 0.45s var(--ease); }
-/* Slide up from the bottom into the centered dock (Zoom/Meet style). */
-@keyframes dockIn {
-    from { opacity: 0; transform: translate(-50%, 16px); }
-    to   { opacity: 1; transform: translate(-50%, 0); }
-}
+@keyframes dockIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
 
 .glass-panel {
     background: var(--glass-bg);
@@ -732,88 +701,12 @@ body {
     background: #000;
     border-radius: var(--r-md);
     overflow: hidden;
-    /* Default (not speaking) border — neutral so a green border clearly means
-       "this person is talking". */
-    border: 2px solid var(--glass-border);
+    border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-md);
     position: relative;
     pointer-events: auto;
     animation: tileIn 0.4s var(--ease);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-/* Speaking indicator: a glowing green border while this user's mic level is
-   above the talking threshold. Toggled from JS (volume-indicator event). */
-.agora-tile.speaking {
-    border-color: #2ecc71;
-    box-shadow: var(--shadow-md), 0 0 0 1px #2ecc71, 0 0 16px rgba(46, 204, 113, 0.55);
-}
-/* Hover affordance for expanding a tile to the big shared view. */
-.agora-tile { cursor: zoom-in; }
-.agora-tile .agora-tile-expand {
-    position: absolute;
-    top: 6px; right: 6px;
-    z-index: 3;
-    width: 26px; height: 26px;
-    display: flex; align-items: center; justify-content: center;
-    border: none;
-    border-radius: 6px;
-    background: rgba(0, 0, 0, 0.55);
-    color: #fff;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.15s ease, background 0.15s ease;
-}
-.agora-tile:hover .agora-tile-expand { opacity: 1; }
-.agora-tile .agora-tile-expand:hover { background: rgba(0, 0, 0, 0.8); }
-
-/* ===== Expanded (big) video view — for screen shares / focusing a camera ===== */
-#agora-stage {
-    position: fixed;
-    inset: 0;
-    z-index: 4000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(5, 6, 16, 0.88);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-#agora-stage.visible { display: flex; animation: fadeIn 0.25s var(--ease); }
-#agora-stage .agora-stage-inner {
-    position: relative;
-    width: min(92vw, calc(88vh * 16 / 9));
-    height: min(88vh, calc(92vw * 9 / 16));
-    background: #000;
-    border-radius: var(--r-lg);
-    overflow: hidden;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-lg), 0 0 80px rgba(123, 111, 245, 0.25);
-}
-#agora-stage .agora-stage-video { width: 100%; height: 100%; }
-#agora-stage .agora-stage-video video { width: 100% !important; height: 100% !important; object-fit: contain; background: #000; }
-#agora-stage .agora-stage-label {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    padding: 10px 16px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #fff;
-    background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
-}
-#agora-stage .agora-stage-close {
-    position: absolute;
-    top: 14px; right: 14px;
-    width: 40px; height: 40px;
-    display: flex; align-items: center; justify-content: center;
-    border: none;
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.55);
-    color: #fff;
-    font-size: 1.4rem;
-    cursor: pointer;
-    transition: background 0.15s ease;
-}
-#agora-stage .agora-stage-close:hover { background: rgba(255, 255, 255, 0.18); }
 @keyframes tileIn { from { opacity: 0; transform: translateX(20px) scale(0.95); } to { opacity: 1; transform: none; } }
 .agora-tile-video { width: 100%; height: 100%; }
 .agora-tile-video video { width: 100% !important; height: 100% !important; object-fit: cover; }
@@ -850,7 +743,7 @@ body {
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-    #voice-controls { bottom: var(--sp-sm); left: 50%; transform: translateX(-50%); flex-wrap: nowrap; }
+    #voice-controls { top: var(--sp-sm); left: var(--sp-sm); right: var(--sp-sm); flex-wrap: wrap; }
     .loading-content { min-width: 0; width: 90%; padding: var(--sp-xl) var(--sp-lg); }
     .brand-mark { font-size: 2.1rem; }
     .brand-tagline { font-size: 0.7rem; letter-spacing: 0.22em; }

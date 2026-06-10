@@ -156,6 +156,17 @@
     </div>
   </div>
 
+  <!-- Scene cover: hides the raw empty-scene camera (blank sky) while the
+       GameScene loads + the player spawns. Toggled from Unity via
+       JS_Show/HideSceneCover (browser.jslib). -->
+  <div id="scene-cover">
+    <div class="loading-orbit"></div>
+    <div class="brand-mark pulse-animation">
+      <span class="brand-veonary">VEONARY</span><span class="brand-land">LAND</span>
+    </div>
+    <p class="brand-tagline">Entering world…</p>
+  </div>
+
   <!-- Voice Chat Controls -->
   <div id="voice-controls" class="glass-panel">
     <button id="voiceBtn" class="voice-btn" title="Enable Voice Chat">
@@ -200,16 +211,6 @@
   <!-- Agora video tiles: AgoraBridge.jslib renders each remote (and local)
        camera video into a tile inside this container (bottom-right corner). -->
   <div id="agora-tiles"></div>
-
-  <!-- Expanded ("big screen") view: clicking a tile (or its expand button)
-       plays that user's video here so everyone can see a screen share clearly. -->
-  <div id="agora-stage">
-    <div class="agora-stage-inner">
-      <div id="agora-stage-video" class="agora-stage-video"></div>
-      <div id="agora-stage-label" class="agora-stage-label"></div>
-      <button id="agora-stage-close" class="agora-stage-close" title="Close">&times;</button>
-    </div>
-  </div>
 
   <!-- Firebase Stub -->
   <script>
@@ -296,9 +297,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/57148faac9579479b685da09dc8e221c.data.unityweb",
-      frameworkUrl: buildUrl + "/01f6dc0fd5a4107cb9c0a5ba21bd70fa.framework.js.unityweb",
-      codeUrl: buildUrl + "/9c68c28df77a6463fcbd63bc4154e252.wasm.unityweb",
+      dataUrl: buildUrl + "/84d23a379a80c9fba57af12f649008d6.data.unityweb",
+      frameworkUrl: buildUrl + "/72dd8092a2afd1ac558f078e7d83e638.framework.js.unityweb",
+      codeUrl: buildUrl + "/83292750a79caa2d5ba133dba719bdca.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
@@ -317,21 +318,6 @@
         loadingPercentage.textContent = Math.round(100 * progress) + "%";
       }).then(function (unityInstance) {
         window.unityInstance = unityInstance;
-
-        // CRITICAL: Stop Unity from grabbing ALL keyboard input at the document
-        // level. While captureAllKeyboardInput is true (the Unity default), the
-        // engine installs document-wide key listeners that preventDefault() every
-        // keystroke, so HTML <input> fields (e.g. the login form) never receive
-        // characters. Turning it off makes Unity only listen while its own canvas
-        // is focused, letting the auth inputs work normally.
-        try {
-          if (unityInstance.Module && unityInstance.Module.WebGLInput) {
-            unityInstance.Module.WebGLInput.captureAllKeyboardInput = false;
-            console.log('[Auth] Disabled Unity captureAllKeyboardInput so login inputs work');
-          }
-        } catch (e) {
-          console.warn('[Auth] Could not disable captureAllKeyboardInput:', e);
-        }
 
         // Fade out loading screen
         loadingBar.classList.add('fade-out');
@@ -520,28 +506,19 @@
     // Track whether we're in Sign In or Sign Up mode
     var isSignUpMode = false;
 
-    // FIX: Prevent Unity from swallowing keyboard input while the user is typing
-    // in an HTML field (login/signup). Unity installs document-level key
-    // listeners that call preventDefault() on every key, which stops characters
-    // from being entered into <input> elements.
-    //
-    // A capture-phase listener on `window` runs BEFORE Unity's document-level
-    // listener (window is the outermost ancestor in capture order). When the
-    // focused element is a text field, we stopImmediatePropagation() so the
-    // event never reaches Unity — but we deliberately do NOT preventDefault(),
-    // so the character is still typed into the field normally.
-    function isEditableTarget(t) {
-      if (!t) return false;
-      var tag = t.tagName;
-      return tag === 'INPUT' || tag === 'TEXTAREA' || t.isContentEditable === true;
+    // FIX: Prevent Unity from capturing keyboard input when typing in fields
+    function stopPropagation(e) {
+      e.stopPropagation();
     }
-    function guardKeyboardForInputs(e) {
-      if (isEditableTarget(e.target)) {
-        e.stopImmediatePropagation();
+
+    const inputIds = ['authEmail', 'authPassword'];
+    inputIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('keydown', stopPropagation);
+        el.addEventListener('keyup', stopPropagation);
+        el.addEventListener('keypress', stopPropagation);
       }
-    }
-    ['keydown', 'keyup', 'keypress'].forEach(function (type) {
-      window.addEventListener(type, guardKeyboardForInputs, true);
     });
 
     // Cursor-follow glow on the auth card (purely cosmetic).
@@ -648,25 +625,6 @@
       }
     };
 
-    // Visual feedback helper: show a spinner on the clicked button and disable
-    // all auth buttons so the user can see the click registered. Pass null to
-    // clear (on failure) and re-enable everything.
-    function setAuthBusy(activeBtn) {
-      var btns = document.querySelectorAll('.auth-btn');
-      for (var i = 0; i < btns.length; i++) {
-        btns[i].classList.remove('is-loading');
-        if (activeBtn) {
-          if (btns[i] === activeBtn) {
-            btns[i].classList.add('is-loading');
-          } else {
-            btns[i].disabled = true;
-          }
-        } else {
-          btns[i].disabled = false;
-        }
-      }
-    }
-
     // Email/Password Authentication Button
     document.getElementById('emailAuthBtn').onclick = function () {
       const email = document.getElementById('authEmail').value.trim();
@@ -679,7 +637,6 @@
 
       if (window.__authInProgress) { console.log('[Auth] Sign-in already in progress — ignoring extra click'); return; }
       window.__authInProgress = true;
-      setAuthBusy(this);
 
       if (isSignUpMode) {
         // Sign Up
@@ -691,7 +648,6 @@
           })
           .catch(function (error) {
             window.__authInProgress = false;
-            setAuthBusy(null);
             console.error('[Auth] Sign up failed:', error);
             alert('Sign up failed: ' + error.message);
           });
@@ -761,140 +717,6 @@
         }
       }, 100); // Check every 100ms
     }
-  </script>
-
-  <!-- ============================================================
-       Agora UI extras (live, no Unity rebuild needed):
-       1) Green speaking border on a user's camera tile while they talk.
-       2) Click a tile to open it big so everyone can see a screen share.
-       Tiles are created by AgoraBridge.jslib; we enhance them from here by
-       reaching into the shared window.AgoraState the bridge sets up.
-       ============================================================ -->
-  <script>
-    (function () {
-      var SPEAK_THRESHOLD = 5;   // Agora volume 0..100; >5 ≈ actively talking.
-
-      function tileUidFromEl(tileEl) {
-        // tile id is "agora-tile-<uid>"
-        var m = /^agora-tile-(.+)$/.exec(tileEl.id || "");
-        return m ? m[1] : null;
-      }
-
-      // Resolve the live video track for a uid from the bridge's state, so we
-      // can replay it into the big stage. Agora tracks can play into multiple
-      // elements at once, so this does not disturb the small tile.
-      function videoTrackForUid(uid) {
-        var A = window.AgoraState;
-        if (!A) return null;
-        if (String(uid) === String(A.myUid)) return A.screenTrack || A.camTrack || null;
-        return (A.remoteVideo && A.remoteVideo[uid]) || null;
-      }
-
-      function labelForUid(uid) {
-        var lbl = document.getElementById("agora-tile-" + uid + "-label");
-        return (lbl && lbl.textContent) || String(uid);
-      }
-
-      // ---- Big "stage" view -------------------------------------------------
-      var stage = document.getElementById("agora-stage");
-      var stageVideo = document.getElementById("agora-stage-video");
-      var stageLabel = document.getElementById("agora-stage-label");
-      var stageClose = document.getElementById("agora-stage-close");
-      var stageTrack = null;
-
-      function closeStage() {
-        if (stageTrack) { try { stageTrack.stop(); } catch (e) {} stageTrack = null; }
-        if (stageVideo) stageVideo.innerHTML = "";
-        if (stage) stage.classList.remove("visible");
-      }
-
-      function openStage(uid) {
-        var track = videoTrackForUid(uid);
-        if (!track) { console.warn("[AgoraUI] No video track to expand for", uid); return; }
-        if (stageTrack) { try { stageTrack.stop(); } catch (e) {} }
-        stageTrack = track;
-        stageVideo.innerHTML = "";
-        stageLabel.textContent = labelForUid(uid);
-        stage.classList.add("visible");
-        // Play into the big element (id required by Agora's play()).
-        try { track.play("agora-stage-video"); }
-        catch (e) { console.error("[AgoraUI] stage play failed:", e); }
-      }
-
-      if (stageClose) stageClose.onclick = closeStage;
-      if (stage) stage.addEventListener("click", function (e) {
-        if (e.target === stage) closeStage(); // click backdrop to close
-      });
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape" && stage && stage.classList.contains("visible")) closeStage();
-      });
-
-      // Add an expand button + click-to-expand to any tile that appears.
-      function enhanceTile(tileEl) {
-        if (!tileEl || tileEl.__enhanced) return;
-        tileEl.__enhanced = true;
-        var uid = tileUidFromEl(tileEl);
-        if (!uid) return;
-
-        var btn = document.createElement("button");
-        btn.className = "agora-tile-expand";
-        btn.title = "Open big";
-        btn.innerHTML =
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
-          '<polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline>' +
-          '<line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>';
-        btn.onclick = function (ev) { ev.stopPropagation(); openStage(uid); };
-        tileEl.appendChild(btn);
-
-        tileEl.addEventListener("click", function () { openStage(uid); });
-      }
-
-      // Tiles are added/removed dynamically by the bridge — watch the container.
-      function scanTiles() {
-        var tiles = document.querySelectorAll("#agora-tiles .agora-tile");
-        for (var i = 0; i < tiles.length; i++) enhanceTile(tiles[i]);
-      }
-      var tilesRoot = document.getElementById("agora-tiles");
-      if (tilesRoot && window.MutationObserver) {
-        new MutationObserver(scanTiles).observe(tilesRoot, { childList: true });
-      }
-      setInterval(scanTiles, 1000); // fallback for environments without observer
-
-      // ---- Speaking indicator ----------------------------------------------
-      // Wait until the bridge has created the Agora client, then ask Agora to
-      // report per-user audio volumes and flip the .speaking class on tiles.
-      var wired = false;
-      var wait = setInterval(function () {
-        var A = window.AgoraState;
-        if (!A || !A.client || wired) return;
-        wired = true;
-        clearInterval(wait);
-        try {
-          // 200ms reporting interval; covers local + remote users.
-          A.client.enableAudioVolumeIndicator();
-          A.client.on("volume-indicator", function (volumes) {
-            // Build a quick set of who is currently talking.
-            var talking = {};
-            for (var i = 0; i < volumes.length; i++) {
-              var v = volumes[i];
-              // uid 0 (or our own uid) represents the local user.
-              var uid = (v.uid === 0 || v.uid === "0") ? A.myUid : v.uid;
-              if (v.level > SPEAK_THRESHOLD) talking[String(uid)] = true;
-            }
-            // Apply to every tile.
-            var tiles = document.querySelectorAll("#agora-tiles .agora-tile");
-            for (var t = 0; t < tiles.length; t++) {
-              var tu = tileUidFromEl(tiles[t]);
-              if (tu == null) continue;
-              tiles[t].classList.toggle("speaking", !!talking[String(tu)]);
-            }
-          });
-          console.log("[AgoraUI] Speaking indicator wired.");
-        } catch (e) {
-          console.error("[AgoraUI] Could not enable volume indicator:", e);
-        }
-      }, 500);
-    })();
   </script>
 
 </body>
