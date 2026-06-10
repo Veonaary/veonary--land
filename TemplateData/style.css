@@ -172,8 +172,10 @@ body {
     justify-content: center;
     z-index: 1;
 }
-#unity-container.unity-desktop { padding: 76px 20px; }
-#unity-container.unity-mobile  { padding: 64px 8px 8px; }
+/* Minimal margin so the game fills most of the window. The footer/dock float
+   over the canvas, so they don't need reserved space. */
+#unity-container.unity-desktop { padding: 12px; }
+#unity-container.unity-mobile  { padding: 6px; }
 
 #unity-canvas {
     background: var(--bg-2);
@@ -542,15 +544,16 @@ body {
 /* ==================== TOP-LEFT CONTROL DOCK (voice/cam/screen) ==================== */
 #voice-controls {
     position: fixed;
-    top: var(--sp-md);
-    left: var(--sp-md);
-    z-index: 1000;
-    display: none; /* shown by JS when in the game scene */
+    bottom: 14px;                 /* docked at the BOTTOM, centered */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;                /* above the footer bar */
+    display: none;                /* shown by JS when in the game scene */
     align-items: center;
     gap: var(--sp-sm);
 }
 #voice-controls.visible { display: flex; animation: dockIn 0.45s var(--ease); }
-@keyframes dockIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes dockIn { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
 .glass-panel {
     background: var(--glass-bg);
@@ -743,7 +746,7 @@ body {
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-    #voice-controls { top: var(--sp-sm); left: var(--sp-sm); right: var(--sp-sm); flex-wrap: wrap; }
+    #voice-controls { bottom: 10px; gap: 6px; }
     .loading-content { min-width: 0; width: 90%; padding: var(--sp-xl) var(--sp-lg); }
     .brand-mark { font-size: 2.1rem; }
     .brand-tagline { font-size: 0.7rem; letter-spacing: 0.22em; }

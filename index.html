@@ -297,9 +297,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/84d23a379a80c9fba57af12f649008d6.data.unityweb",
+      dataUrl: buildUrl + "/8c1b5940547729754ca16d7d611ca665.data.unityweb",
       frameworkUrl: buildUrl + "/72dd8092a2afd1ac558f078e7d83e638.framework.js.unityweb",
-      codeUrl: buildUrl + "/83292750a79caa2d5ba133dba719bdca.wasm.unityweb",
+      codeUrl: buildUrl + "/1ef6d093411ea1c8d5687068bf416fd1.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
@@ -319,18 +319,15 @@
       }).then(function (unityInstance) {
         window.unityInstance = unityInstance;
 
-        // Fade out loading screen
+        // Fade out loading screen and show auth right away (auth overlay sits
+        // above and fades in, so we don't wait the full fade before showing it).
         loadingBar.classList.add('fade-out');
-        setTimeout(() => {
-          loadingBar.style.display = "none";
-
-          // NOW show the auth overlay (after Unity is loaded)
-          const authOverlay = document.getElementById('auth-overlay');
-          if (authOverlay) {
-            authOverlay.classList.add('visible');
-            console.log('[Auth] Unity loaded! Showing authentication overlay...');
-          }
-        }, 500);
+        const authOverlay = document.getElementById('auth-overlay');
+        if (authOverlay) {
+          authOverlay.classList.add('visible');
+          console.log('[Auth] Unity loaded! Showing authentication overlay...');
+        }
+        setTimeout(() => { loadingBar.style.display = "none"; }, 300);
 
         fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
         console.log("Unity loaded successfully!");
