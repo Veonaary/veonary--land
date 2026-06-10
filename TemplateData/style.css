@@ -724,8 +724,24 @@ body {
     flex-direction: column;
     gap: var(--sp-sm);
     align-items: flex-end;
-    pointer-events: none;
+    /* Cap the stack height so many cameras don't run off the top of the screen;
+       extra tiles scroll instead. pointer-events auto so the column is
+       scrollable (individual tiles re-enable too). */
+    max-height: 80vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2px;            /* room for tile borders/scroll */
+    pointer-events: auto;
+    /* thin, themed scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(123, 111, 245, 0.5) transparent;
 }
+#agora-tiles::-webkit-scrollbar { width: 6px; }
+#agora-tiles::-webkit-scrollbar-thumb {
+    background: rgba(123, 111, 245, 0.5);
+    border-radius: var(--r-full);
+}
+#agora-tiles::-webkit-scrollbar-track { background: transparent; }
 .agora-tile {
     width: 210px; height: 132px;
     background: #000;
