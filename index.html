@@ -298,9 +298,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/b65bee543d90bdfc6b7e4cfd8cd5f503.data.unityweb",
-      frameworkUrl: buildUrl + "/6f58fd0702a42fd8403ce673ab8747f4.framework.js.unityweb",
-      codeUrl: buildUrl + "/beda20aaf128eb896c4ee0819825464f.wasm.unityweb",
+      dataUrl: buildUrl + "/b8851a8ceb5333614983b1516cac2143.data.unityweb",
+      frameworkUrl: buildUrl + "/4ed1fe068c420ba54654cb0cf60e5e86.framework.js.unityweb",
+      codeUrl: buildUrl + "/b80f4a922af7e39399b3bc9e91bb0ee9.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
@@ -363,18 +363,23 @@
           indicator.classList.add('active');
           console.log("[Voice] Enabled via user gesture");
         } else {
-          // Interaction: Toggle Mute
+          // Interaction: Toggle Mute. Drive the look entirely via classes so the
+          // muted state is unambiguous: when muted, drop the 'active' (filled
+          // accent + glow) look, add 'muted' (red) and hide the LIVE indicator;
+          // when live again, restore 'active' and the indicator.
           isMuted = !isMuted;
           window.unityInstance.SendMessage("VoiceManager", "SetMute", isMuted ? 1 : 0);
 
           if (isMuted) {
             btn.querySelector('.voice-text').textContent = "Unmute";
-            btn.style.backgroundColor = "#ff4444"; // Visual feedback
-            indicator.style.opacity = "0.3";
+            btn.classList.remove('active');
+            btn.classList.add('muted');
+            indicator.classList.remove('active');
           } else {
             btn.querySelector('.voice-text').textContent = "Mute Mic";
-            btn.style.backgroundColor = ""; // Reset
-            indicator.style.opacity = "1";
+            btn.classList.remove('muted');
+            btn.classList.add('active');
+            indicator.classList.add('active');
           }
         }
       };
@@ -391,26 +396,13 @@
       camBtn.onclick = function () {
         if (!window.unityInstance) return;
 
-        // Camera needs the Agora channel joined. If voice isn't enabled yet,
-        // enable it from THIS same click gesture so the channel joins and the
-        // mic publishes — then request the camera. (Browsers grant camera
-        // permission most reliably when the request originates from a user
-        // gesture; piggybacking on this click avoids the camera silently
-        // failing to prompt.)
-        if (!window.__voiceEnabled) {
-          unlockAudioContext();
-          window.unityInstance.SendMessage("VoiceManager", "StartVoice");
-          window.__voiceEnabled = true;
-          // Reflect voice-on state on the voice button too.
-          var vb = document.getElementById("voiceBtn");
-          if (vb) {
-            vb.classList.add('active');
-            var vt = vb.querySelector('.voice-text'); if (vt) vt.textContent = "Mute Mic";
-          }
-          var ind = document.getElementById("voiceIndicator");
-          if (ind) ind.classList.add('active');
-          console.log("[Voice] Enabled via camera button gesture");
-        }
+        // Camera and mic are independent: turning the camera on must NOT enable
+        // the mic. The Agora channel is already joined (receive-only) on entering
+        // the room, and the Unity SetCamera path joins it on demand if needed, so
+        // the camera works on the first click without publishing the mic.
+        // Unlock the audio context (gesture-gated, needed so remote audio plays)
+        // but do not call StartVoice.
+        unlockAudioContext();
 
         camOn = !camOn;
         window.unityInstance.SendMessage("VoiceManager", "SetCamera", camOn ? 1 : 0);
@@ -438,20 +430,11 @@
         if (!window.unityInstance) return;
         if (!window.__isAdmin) { console.warn("[Screen] Admin only."); return; }
 
-        // Enable voice from this gesture if not already (same as camera), so the
-        // channel is joined and the OS screen picker opens reliably.
-        if (!window.__voiceEnabled) {
-          unlockAudioContext();
-          window.unityInstance.SendMessage("VoiceManager", "StartVoice");
-          window.__voiceEnabled = true;
-          var vb = document.getElementById("voiceBtn");
-          if (vb) {
-            vb.classList.add('active');
-            var vt = vb.querySelector('.voice-text'); if (vt) vt.textContent = "Mute Mic";
-          }
-          var ind = document.getElementById("voiceIndicator");
-          if (ind) ind.classList.add('active');
-        }
+        // Screen share must NOT enable the mic. The channel is already joined
+        // (receive-only) on room entry, and the Unity SetScreen path joins it on
+        // demand if needed. Unlock the audio context (gesture-gated) but leave
+        // the mic alone.
+        unlockAudioContext();
 
         sharing = !sharing;
         window.unityInstance.SendMessage("VoiceManager", "SetScreen", sharing ? 1 : 0);

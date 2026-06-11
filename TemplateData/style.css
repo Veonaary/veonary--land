@@ -189,11 +189,16 @@ body {
         0 0 50px rgba(123, 111, 245, 0.22),
         0 0 120px rgba(79, 208, 255, 0.10);
     display: block;
-    /* Fill the width; cap the height so the gameplay area is wider + shorter. */
-    width: 100% !important;
+    /* Gameplay area: wider than tall (cinematic). The size MUST be explicit and
+       independent of the canvas's own drawing buffer — using height:auto makes
+       the canvas height follow its intrinsic (drawing-buffer) size, so when
+       Unity sizes its FBO from the CSS box the box changes by 1px, Unity
+       re-measures, and it recreates the FBO every frame (the "Recreating
+       Offscreen FBO NxH => Nx(H+1)" spam, a per-frame GPU stall). Fixing the
+       height to a viewport value and capping the width breaks that loop. */
+    height: 82vh;
+    width: auto;
     max-width: 100%;
-    height: auto !important;
-    max-height: 82vh;          /* shorter than full-height */
     object-fit: cover;         /* fill the wider/shorter box, crop slightly */
 }
 .unity-mobile #unity-canvas { border-radius: var(--r-md); }
@@ -637,6 +642,20 @@ body {
     box-shadow: var(--glow);
 }
 .voice-btn.active svg { background: rgba(255, 255, 255, 0.18); }
+
+/* muted = voice enabled but mic off → unmistakably red, no accent glow, so it
+   never reads as "live". Takes precedence over .active (the JS removes .active
+   when muting, but this also wins on specificity if both are ever present). */
+.voice-btn.muted,
+.voice-btn.active.muted {
+    background: #ff4444;
+    background-size: auto;
+    border-color: transparent;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    box-shadow: none;
+}
+.voice-btn.muted svg { background: rgba(255, 255, 255, 0.18); }
 
 /* ---- "mic is LIVE" indicator: a clean pulsing dot + label, not bars ---- */
 .voice-indicator {
