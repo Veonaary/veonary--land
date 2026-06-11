@@ -172,10 +172,8 @@ body {
     justify-content: center;
     z-index: 1;
 }
-/* Wider gameplay: very small side margin; a bit more top/bottom so the play
-   area is wider than it is tall (cinematic). */
-#unity-container.unity-desktop { padding: 36px 8px; }
-#unity-container.unity-mobile  { padding: 24px 6px; }
+#unity-container.unity-desktop { padding: 24px; }
+#unity-container.unity-mobile  { padding: 56px 4px 4px; }
 
 #unity-canvas {
     background: var(--bg-2);
@@ -189,17 +187,20 @@ body {
         0 0 50px rgba(123, 111, 245, 0.22),
         0 0 120px rgba(79, 208, 255, 0.10);
     display: block;
-    /* Gameplay area: wider than tall (cinematic). The size MUST be explicit and
-       independent of the canvas's own drawing buffer — using height:auto makes
-       the canvas height follow its intrinsic (drawing-buffer) size, so when
-       Unity sizes its FBO from the CSS box the box changes by 1px, Unity
-       re-measures, and it recreates the FBO every frame (the "Recreating
-       Offscreen FBO NxH => Nx(H+1)" spam, a per-frame GPU stall). Fixing the
-       height to a viewport value and capping the width breaks that loop. */
-    height: 82vh;
-    width: auto;
+    /* Fill the available space as a large 16:9 widescreen view. The build's
+       intrinsic canvas size may be square, but we override the layout box so
+       the game presents as a big rectangle instead of a small square.
+       Sized to the largest 16:9 box that fits the padded container:
+       width is capped by viewport width, height by viewport height. */
+    aspect-ratio: 16 / 9;
+    /* Cap the height a little below the full viewport so the gameplay view
+       isn't overwhelmingly tall, while width is driven by the 16:9 ratio so it
+       stays a wide rectangle and uses the horizontal space. */
+    width: min(100%, calc(82vh * 16 / 9)) !important;
+    height: auto !important;
     max-width: 100%;
-    object-fit: cover;         /* fill the wider/shorter box, crop slightly */
+    max-height: 82vh;
+    object-fit: cover;
 }
 .unity-mobile #unity-canvas { border-radius: var(--r-md); }
 
