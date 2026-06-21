@@ -172,7 +172,9 @@ body {
     justify-content: center;
     z-index: 1;
 }
-#unity-container.unity-desktop { padding: 24px; }
+/* Extra bottom padding nudges the centered canvas slightly UP, leaving a bit
+   more breathing room below it for the voice/camera control dock. */
+#unity-container.unity-desktop { padding: 24px 24px 72px; }
 #unity-container.unity-mobile  { padding: 56px 4px 4px; }
 
 #unity-canvas {
