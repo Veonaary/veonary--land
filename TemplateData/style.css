@@ -371,50 +371,20 @@ body {
 }
 @keyframes tipFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 0.85; transform: none; } }
 
-/* ==================== SCENE COVER (entering world) ==================== */
-/* Same cinematic look as the loading screen; sits above the canvas while the
-   GameScene loads + the player spawns, so the empty default camera view is
-   never shown. Hidden (faded) by CameraController once it's following the player. */
-#scene-cover {
-    position: fixed;
-    inset: 0;
-    z-index: 2500; /* above canvas + voice dock, below auth overlay */
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background:
-        radial-gradient(900px 600px at 50% 40%, rgba(123,111,245,0.12), transparent 70%),
-        var(--bg-0);
-    transition: opacity 0.5s var(--ease);
-}
-#scene-cover .loading-orbit { margin-bottom: var(--sp-lg); }
-#scene-cover.hide { opacity: 0; pointer-events: none; }
-
-/* Indeterminate loading bar (no real % — a sweeping fill that reads as
-   "loading"). Used on the scene cover where progress isn't measurable. */
-.indeterminate-bar {
-    width: 280px;
-    max-width: 70vw;
-    height: 6px;
-    margin-top: var(--sp-lg);
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: var(--r-full);
-    overflow: hidden;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
-}
-.indeterminate-bar span {
-    display: block;
-    width: 40%;
-    height: 100%;
-    border-radius: var(--r-full);
-    background: linear-gradient(90deg, var(--accent-1), var(--accent-2), var(--accent-3));
-    box-shadow: 0 0 12px rgba(123, 111, 245, 0.7);
-    animation: indeterminate 1.2s var(--ease) infinite;
+/* ==================== LOADING — INDETERMINATE STATE ==================== */
+/* The single loading card (#unity-loading-bar) is reused for load states with
+   no measurable progress (e.g. "Entering world…", set by JS_ShowSceneCover).
+   In this mode we hide the % readout and turn the progress bar into a sweeping
+   indeterminate fill instead of a real width. */
+#unity-loading-bar.indeterminate #loading-percentage { display: none; }
+#unity-loading-bar.indeterminate #unity-progress-bar-full {
+    /* A fixed-width slug that sweeps across, rather than a 0→100% fill. */
+    width: 40% !important;
+    animation: barFlow 2.2s linear infinite, indeterminate 1.3s var(--ease) infinite;
 }
 @keyframes indeterminate {
     0%   { transform: translateX(-120%); }
-    100% { transform: translateX(330%); }
+    100% { transform: translateX(280%); }
 }
 
 /* ==================== AUTH OVERLAY ==================== */
@@ -540,12 +510,16 @@ body {
     color: #fff;
     border-color: transparent;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); /* keep label crisp on the fill */
-    box-shadow: 0 6px 20px rgba(91, 79, 214, 0.4);
+    /* Glow reduced ~30% vs the in-game dock so the login reads premium, not
+       gamey. Scoped here (not via --glow) so the HUD's accent glow is unchanged. */
+    box-shadow: 0 6px 20px rgba(91, 79, 214, 0.28);
 }
 .auth-btn.primary:hover {
     transform: translateY(-2px);
     background-position: right center;
-    box-shadow: 0 10px 30px rgba(91, 79, 214, 0.55), var(--glow);
+    /* ~30% softer than the dock glow: lift shadow 0.55→0.38, and a scoped accent
+       halo (0.45→0.30) instead of the shared --glow token. */
+    box-shadow: 0 10px 30px rgba(91, 79, 214, 0.38), 0 0 28px rgba(123, 111, 245, 0.30);
 }
 .auth-btn.secondary {
     background: var(--glass-bg);
@@ -586,15 +560,27 @@ body {
 .auth-divider span { padding: 0 var(--sp-md); }
 
 /* ==================== TOP-LEFT CONTROL DOCK (voice/cam/screen) ==================== */
+/* The in-world control dock: one cohesive glass bar, not a loose row of pills.
+   It overlays the 3D world, so it uses the glass treatment from the design
+   system. The blur is small-area (just the dock), so it's cheap on WebGL — the
+   perf rule only bans full-screen backdrop blur. */
 #voice-controls {
     position: fixed;
-    bottom: 14px;                 /* docked at the BOTTOM, centered */
+    bottom: 18px;                 /* docked at the BOTTOM, centered */
     left: 50%;
     transform: translateX(-50%);
     z-index: 1100;                /* above the footer bar */
     display: none;                /* shown by JS when in the game scene */
     align-items: center;
-    gap: var(--sp-sm);
+    gap: var(--sp-xs);
+    /* unified glass dock surface */
+    padding: 7px;
+    background: rgba(10, 11, 18, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 0.5px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 #voice-controls.visible { display: flex; animation: dockIn 0.45s var(--ease); }
 @keyframes dockIn { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
@@ -609,17 +595,19 @@ body {
     box-shadow: var(--shadow-md);
 }
 
+/* Buttons read as segments INSIDE the glass dock: nearly borderless at rest so
+   they don't look like glass-on-glass; the active/muted fills still pop. */
 .voice-btn {
     display: flex;
     align-items: center;
     gap: 0.55rem;
     padding: 0.5rem 1.05rem 0.5rem 0.6rem;
-    background: rgba(255, 255, 255, 0.045);
-    border: 1px solid var(--glass-border);
+    background: transparent;
+    border: 1px solid transparent;
     border-radius: var(--r-full);          /* pill shape */
     color: var(--text-1);
     font-size: 0.88rem;
-    font-weight: 600;
+    font-weight: 500;
     font-family: inherit;
     cursor: pointer;
     transition: transform 0.16s var(--ease), background 0.16s var(--ease), border-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
@@ -637,9 +625,8 @@ body {
 }
 .voice-btn:hover {
     transform: translateY(-1px);
-    background: var(--glass-bg-strong);
-    border-color: rgba(123, 111, 245, 0.45);
-    box-shadow: var(--glow);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.10);
 }
 .voice-btn:hover svg { transform: scale(1.08); }
 .voice-btn:active { transform: translateY(0) scale(0.98); }
@@ -746,9 +733,11 @@ body {
 .control-btn:active { transform: translateY(0); }
 
 /* ==================== AGORA VIDEO TILES ==================== */
+/* Participant video tiles, pinned TOP-RIGHT as glass tiles (per the HUD design).
+   The tile DOM/classes are generated by AgoraBridge.jslib — only styled here. */
 #agora-tiles {
     position: fixed;
-    bottom: 72px;
+    top: var(--sp-lg);
     right: var(--sp-lg);
     z-index: 1000;
     display: flex;
@@ -775,11 +764,16 @@ body {
 #agora-tiles::-webkit-scrollbar-track { background: transparent; }
 .agora-tile {
     width: 210px; height: 132px;
-    background: #000;
-    border-radius: var(--r-md);
+    /* Glass frame around the video: dark glass backing shows through letterboxed
+       edges, with the system's 0.5px hairline + 14px radius so tiles match the
+       dock and panels. */
+    background: rgba(10, 11, 18, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 14px;
     overflow: hidden;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-md);
+    border: 0.5px solid rgba(255, 255, 255, 0.12);
+    box-shadow: var(--shadow-lg);
     position: relative;
     pointer-events: auto;
     animation: tileIn 0.4s var(--ease);
@@ -790,11 +784,14 @@ body {
 .agora-tile-label {
     position: absolute;
     bottom: 0; left: 0; right: 0;
-    padding: 3px 8px;
+    padding: 4px 9px;
     font-size: 0.74rem;
-    font-weight: 600;
-    color: #fff;
-    background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.92);
+    background: linear-gradient(0deg, rgba(0,0,0,0.72), transparent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ==================== WARNING BANNER ==================== */
@@ -851,7 +848,7 @@ body {
     .loading-content::before,
     .loading-orbit::before,
     .loading-orbit::after,
-    .indeterminate-bar span,
+    #unity-loading-bar.indeterminate #unity-progress-bar-full,
     .pulse-animation,
     .wave-bar,
     .voice-btn.active {

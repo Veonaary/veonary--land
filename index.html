@@ -120,7 +120,11 @@
     <!-- Unity Canvas -->
     <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
 
-    <!-- Loading Screen -->
+    <!-- Loading Screen — the ONE loading screen. Used both for the initial Unity
+         download (real % progress) and for every later load state (entering a
+         world, etc.) via JS_ShowSceneCover/JS_HideSceneCover, which just re-show
+         this card and swap the status text. The old minimal #scene-cover was
+         removed; this card is hidden (not destroyed) so it can be reused. -->
     <div id="unity-loading-bar">
       <div class="loading-content">
         <div class="loading-orbit"></div>
@@ -134,7 +138,7 @@
           </div>
           <div id="loading-percentage">0%</div>
         </div>
-        <p class="loading-tip">Initializing multiplayer systems...</p>
+        <p class="loading-tip" id="loading-status">Initializing multiplayer systems...</p>
       </div>
     </div>
 
@@ -156,17 +160,10 @@
     </div>
   </div>
 
-  <!-- Scene cover: hides the raw empty-scene camera (blank sky) while the
-       GameScene loads + the player spawns. Toggled from Unity via
-       JS_Show/HideSceneCover (browser.jslib). -->
-  <div id="scene-cover">
-    <div class="loading-orbit"></div>
-    <div class="brand-mark pulse-animation">
-      <span class="brand-veonary">VEONARY</span><span class="brand-land">LAND</span>
-    </div>
-    <p class="brand-tagline">Entering world…</p>
-    <div class="indeterminate-bar"><span></span></div>
-  </div>
+  <!-- (The separate #scene-cover "Entering world…" screen was removed. Every load
+       state now routes through the single #unity-loading-bar glass card above —
+       JS_ShowSceneCover/JS_HideSceneCover in browser.jslib re-show it and swap the
+       status text. This keeps ONE loading screen for the whole app.) -->
 
   <!-- Voice Chat Controls -->
   <div id="voice-controls" class="glass-panel">
@@ -284,7 +281,10 @@
       }
     }
 
-    setInterval(updateLoadingTip, 2000);
+    // Only rotate tips during the INITIAL Unity download. Once loaded we stop the
+    // interval so later load states (entering a world) can own the status line
+    // without it being overwritten. window-scoped so the loader can clear it.
+    window.__loadingTipTimer = setInterval(updateLoadingTip, 2000);
 
     function unityShowBanner(msg, type) {
       var div = document.createElement("div");
@@ -299,7 +299,7 @@
 
     var config = {
       dataUrl: buildUrl + "/1cc7c34c20de5cbcb555eee6d17cf3a6.data.unityweb",
-      frameworkUrl: buildUrl + "/33af6acb9419ff7f711abc2a295605c4.framework.js.unityweb",
+      frameworkUrl: buildUrl + "/0cebd191e3ff42f3d56268259d2149e0.framework.js.unityweb",
       codeUrl: buildUrl + "/acbb411af3f648174ff39836c48f15af.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
@@ -340,10 +340,18 @@
           console.log('[Auth] Unity loaded! Showing authentication overlay...');
         }
 
-        // Remove the overlay from the DOM after the 0.6s fade completes so it
-        // can never intercept clicks or repaint. 650ms = fade + small buffer.
+        // Keep the overlay in the DOM (just hidden) so it can be REUSED as the
+        // single loading screen for later load states (entering a world). After
+        // the 0.6s fade, set display:none and reset its state for next time:
+        //  - stop the initial tip rotation so it won't overwrite future statuses
+        //  - clear the fade-out class so re-showing it is instantly opaque
+        // 650ms = fade + small buffer.
         setTimeout(() => {
-          if (loadingBar && loadingBar.parentNode) loadingBar.parentNode.removeChild(loadingBar);
+          if (window.__loadingTipTimer) { clearInterval(window.__loadingTipTimer); window.__loadingTipTimer = null; }
+          if (loadingBar) {
+            loadingBar.style.display = "none";
+            loadingBar.classList.remove('fade-out');
+          }
         }, 650);
 
         fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
