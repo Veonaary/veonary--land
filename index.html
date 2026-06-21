@@ -320,15 +320,31 @@
       }).then(function (unityInstance) {
         window.unityInstance = unityInstance;
 
-        // Fade out loading screen and show auth right away (auth overlay sits
-        // above and fades in, so we don't wait the full fade before showing it).
+        // Unity is fully loaded. Tear down the full-screen loading overlay:
+        //  1) start the 0.6s opacity fade-out (CSS transition on #unity-loading-bar)
+        //  2) reveal the canvas (it was visibility:hidden so the Unity splash /
+        //     first blank frames were never shown to the user)
+        //  3) once the fade finishes, remove the overlay from the DOM entirely
+        //
+        // The auth overlay sits above (z-index 3000) and fades in immediately, so
+        // the sign-in card appears right away over the now-revealed world.
         loadingBar.classList.add('fade-out');
+
+        // Reveal the Unity canvas now that the overlay is covering it during the
+        // fade — the splash is already gone by the time the overlay clears.
+        canvas.style.visibility = "visible";
+
         const authOverlay = document.getElementById('auth-overlay');
         if (authOverlay) {
           authOverlay.classList.add('visible');
           console.log('[Auth] Unity loaded! Showing authentication overlay...');
         }
-        setTimeout(() => { loadingBar.style.display = "none"; }, 300);
+
+        // Remove the overlay from the DOM after the 0.6s fade completes so it
+        // can never intercept clicks or repaint. 650ms = fade + small buffer.
+        setTimeout(() => {
+          if (loadingBar && loadingBar.parentNode) loadingBar.parentNode.removeChild(loadingBar);
+        }, 650);
 
         fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
         console.log("Unity loaded successfully!");

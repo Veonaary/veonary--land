@@ -178,6 +178,12 @@ body {
 #unity-canvas {
     background: var(--bg-2);
     border-radius: var(--r-lg);
+    /* Kept invisible until the loading overlay fades out, so the user never
+       sees Unity's own splash screen / first blank frames painting on the
+       canvas. JS flips this to "visible" right after the overlay is removed.
+       NOTE: visibility (not display:none) so Unity can still size/init the
+       canvas and WebGL context normally while it's hidden. */
+    visibility: hidden;
     /* Framed, glowing edge so the canvas reads as a premium "window" into the
        world rather than a dark rectangle floating in empty space. */
     border: 1px solid rgba(123, 111, 245, 0.25);
@@ -211,7 +217,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2000;
+    /* 9999 = on top of EVERYTHING (canvas, warning banner, footer, etc.) so the
+       Unity splash screen / first frames painting on the canvas are fully
+       covered until we fade this out. */
+    z-index: 9999;
     transition: opacity 0.6s var(--ease);
     background:
         radial-gradient(900px 600px at 50% 35%, rgba(123,111,245,0.10), transparent 70%),
