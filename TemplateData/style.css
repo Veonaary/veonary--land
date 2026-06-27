@@ -598,6 +598,7 @@ body {
 /* Buttons read as segments INSIDE the glass dock: nearly borderless at rest so
    they don't look like glass-on-glass; the active/muted fills still pop. */
 .voice-btn {
+    position: relative;                     /* anchor for the .key-hint badge */
     display: flex;
     align-items: center;
     gap: 0.55rem;
@@ -622,6 +623,27 @@ body {
     border-radius: 50%;
     transition: transform 0.16s var(--ease), background 0.16s var(--ease);
     flex: none;
+}
+/* keyboard shortcut badge in the top-right corner of the button (e.g. "T") */
+.key-hint {
+    position: absolute;
+    top: -4px;
+    right: -2px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-1);
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 4px;
+    pointer-events: none;
 }
 .voice-btn:hover {
     transform: translateY(-1px);
