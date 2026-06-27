@@ -823,7 +823,7 @@ body {
     .brand-tagline { font-size: 0.7rem; letter-spacing: 0.22em; }
     .auth-card { padding: var(--sp-xl) var(--sp-lg); }
     .auth-title { font-size: 1.6rem; }
-    .voice-text, .cam-text, .screen-text { display: none; } /* icons only on mobile */
+    .voice-text, .cam-text, .screen-text, .chat-text { display: none; } /* icons only on mobile */
     .voice-btn { padding: 0.55rem 0.7rem; }
     .agora-tile { width: 130px; height: 84px; }
     .gradient-orb { filter: blur(64px); }
