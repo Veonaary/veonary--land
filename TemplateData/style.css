@@ -48,7 +48,28 @@
     --glow: 0 0 28px rgba(123, 111, 245, 0.45);
 
     --ease: cubic-bezier(0.22, 1, 0.36, 1); /* smooth "expo-out" feel */
+
+    /* ---- Responsive scaling ------------------------------------------------
+       One fluid scale drives the whole shell instead of a pile of breakpoints.
+       --ui-scale ramps smoothly from small phones (~320px) up to 4K, so every
+       rem-based size (cards, buttons, type) grows/shrinks with the viewport
+       rather than snapping at fixed widths. */
+    --ui-scale: clamp(0.82rem, 0.72rem + 0.30vw, 1.15rem);
+
+    /* Safe-area insets (notched phones / rounded corners). Fall back to 0. */
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
+
+    /* Edge gutter that shrinks on small screens so nothing hugs the bezel. */
+    --gutter: clamp(0.5rem, 2vw, 1.5rem);
 }
+
+/* Drive every rem in the shell off the fluid scale. Setting it on :root means
+   1rem == --ui-scale, so all existing rem-based sizing becomes responsive with
+   no per-component media queries. */
+html { font-size: var(--ui-scale); }
 
 /* ==================== GLOBAL ==================== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -63,10 +84,17 @@ body {
     background: var(--bg-0);
     color: var(--text-1);
     position: relative;
-    width: 100vw;
-    min-height: 100vh;
+    /* 100% (not 100vw) so a visible scrollbar can't push the page sideways. */
+    width: 100%;
+    min-height: 100%;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+}
+/* Dynamic viewport height: on mobile the URL bar collapsing changes the visible
+   height; dvh tracks it so the layout never gets cut off or leaves a gap. */
+@supports (height: 100dvh) {
+    html, body { height: 100dvh; }
+    body { min-height: 100dvh; }
 }
 
 ::selection { background: rgba(123, 111, 245, 0.4); color: #fff; }
@@ -172,10 +200,39 @@ body {
     justify-content: center;
     z-index: 1;
 }
-/* Extra bottom padding nudges the centered canvas slightly UP, leaving a bit
-   more breathing room below it for the voice/camera control dock. */
-#unity-container.unity-desktop { padding: 24px 24px 72px; }
-#unity-container.unity-mobile  { padding: 56px 4px 4px; }
+/* Padding reserves room for the chrome around the canvas (control dock below,
+   safe areas at the edges) and scales with the viewport instead of being fixed.
+   Each variant declares its insets ONCE as variables, then derives both the
+   padding and the available inner box (--avail-w/h) from them, so the canvas
+   sizing below can never drift out of sync with the padding. */
+#unity-container.unity-desktop {
+    --pad-t: calc(var(--gutter) + var(--safe-t));
+    --pad-r: calc(var(--gutter) + var(--safe-r));
+    --pad-b: calc(clamp(3rem, 8vh, 4.5rem) + var(--safe-b)); /* room for the dock */
+    --pad-l: calc(var(--gutter) + var(--safe-l));
+}
+#unity-container.unity-mobile {
+    --pad-t: calc(clamp(0.25rem, 2vh, 3.5rem) + var(--safe-t));
+    --pad-r: calc(0.25rem + var(--safe-r));
+    --pad-b: calc(clamp(3rem, 9vh, 4rem) + var(--safe-b));
+    --pad-l: calc(0.25rem + var(--safe-l));
+}
+#unity-container.unity-desktop,
+#unity-container.unity-mobile {
+    padding: var(--pad-t) var(--pad-r) var(--pad-b) var(--pad-l);
+    /* Inner box the canvas may occupy. vw/vh first as a fallback for older
+       browsers, then overridden with dynamic units (dvw/dvh) where supported so
+       mobile browser chrome collapsing/expanding doesn't clip the view. */
+    --avail-w: calc(100vw - var(--pad-l) - var(--pad-r));
+    --avail-h: calc(100vh - var(--pad-t) - var(--pad-b));
+}
+@supports (height: 100dvh) {
+    #unity-container.unity-desktop,
+    #unity-container.unity-mobile {
+        --avail-w: calc(100dvw - var(--pad-l) - var(--pad-r));
+        --avail-h: calc(100dvh - var(--pad-t) - var(--pad-b));
+    }
+}
 
 #unity-canvas {
     background: var(--bg-2);
@@ -195,20 +252,24 @@ body {
         0 0 50px rgba(123, 111, 245, 0.22),
         0 0 120px rgba(79, 208, 255, 0.10);
     display: block;
-    /* Fill the available space as a large 16:9 widescreen view. The build's
-       intrinsic canvas size may be square, but we override the layout box so
-       the game presents as a big rectangle instead of a small square.
-       Sized to the largest 16:9 box that fits the padded container:
-       width is capped by viewport width, height by viewport height. */
+    /* Present the world as a 16:9 widescreen view, sized to the LARGEST 16:9 box
+       that fits inside the padded container — constrained on BOTH axes so it
+       adapts to any screen shape:
+         • ultrawide / short laptops -> height-limited (letterboxed left/right)
+         • tall phones / portrait    -> width-limited  (letterboxed top/bottom)
+       Being a flex child with min-* 0 lets it shrink; max-width/height do the
+       clamping, and aspect-ratio derives the other dimension. */
     aspect-ratio: 16 / 9;
-    /* Cap the height a little below the full viewport so the gameplay view
-       isn't overwhelmingly tall, while width is driven by the 16:9 ratio so it
-       stays a wide rectangle and uses the horizontal space. */
-    width: min(100%, calc(82vh * 16 / 9)) !important;
+    /* Explicitly solve for the largest 16:9 box that fits, rather than relying on
+       flex's aspect-ratio sizing (which browsers resolve inconsistently).
+       --avail-* are the container's inner box (viewport minus padding + safe
+       areas), declared on #unity-container below. The width is the smaller of
+       "all available width" and "the width implied by the available height". */
+    width: min(var(--avail-w), calc(var(--avail-h) * 16 / 9)) !important;
     height: auto !important;
     max-width: 100%;
-    max-height: 82vh;
-    object-fit: cover;
+    max-height: 100%;
+    object-fit: contain;
 }
 .unity-mobile #unity-canvas { border-radius: var(--r-md); }
 
@@ -240,8 +301,9 @@ body {
     border: 1px solid var(--glass-border);
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-lg), 0 0 70px rgba(123, 111, 245, 0.16);
-    min-width: 440px;
-    max-width: 90vw;
+    /* Fluid: never wider than the viewport, never cramped on phones. Replaces
+       the old fixed min-width:440px, which overflowed small screens. */
+    width: min(27.5rem, calc(100vw - 2 * var(--gutter)));
     animation: cardIn 0.7s var(--ease) both;
     overflow: hidden;
 }
@@ -291,12 +353,15 @@ body {
 
 /* ---- VEONARYLAND wordmark ---- */
 .brand-mark {
-    font-size: 2.7rem;
+    /* Fluid so the wordmark always fits — at 320px a fixed 2.7rem overflowed. */
+    font-size: clamp(1.5rem, 7vw, 2.7rem);
     font-weight: 800;
     letter-spacing: 0.04em;
     line-height: 1;
     margin-bottom: var(--sp-sm);
     user-select: none;
+    white-space: nowrap;
+    max-width: 100%;
 }
 .brand-veonary {
     background: var(--grad-accent);
@@ -378,13 +443,27 @@ body {
    indeterminate fill instead of a real width. */
 #unity-loading-bar.indeterminate #loading-percentage { display: none; }
 #unity-loading-bar.indeterminate #unity-progress-bar-full {
-    /* A fixed-width slug that sweeps across, rather than a 0→100% fill. */
-    width: 40% !important;
-    animation: barFlow 2.2s linear infinite, indeterminate 1.3s var(--ease) infinite;
+    /* Fill the track and animate the GRADIENT rather than translating the element:
+       a translated slug leaves its own box (and the viewport), which shows up as a
+       layout overflow even though the parent clips it visually. Moving the
+       background keeps everything inside the bar. */
+    width: 100% !important;
+    transition: none;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        var(--accent-1) 35%,
+        var(--accent-2) 50%,
+        var(--accent-3) 65%,
+        transparent 100%);
+    background-size: 40% 100%;
+    background-repeat: no-repeat;
+    animation: indeterminate 1.3s var(--ease) infinite;
 }
+/* No highlight head in indeterminate mode — the sweep IS the motion. */
+#unity-loading-bar.indeterminate #unity-progress-bar-full::after { display: none; }
 @keyframes indeterminate {
-    0%   { transform: translateX(-120%); }
-    100% { transform: translateX(280%); }
+    0%   { background-position: -50% 0; }
+    100% { background-position: 150% 0; }
 }
 
 /* ==================== AUTH OVERLAY ==================== */
@@ -395,6 +474,12 @@ body {
     display: none;
     align-items: center;
     justify-content: center;
+    /* Gutter + safe areas so the card never touches the bezel/notch. */
+    padding:
+        calc(var(--gutter) + var(--safe-t))
+        calc(var(--gutter) + var(--safe-r))
+        calc(var(--gutter) + var(--safe-b))
+        calc(var(--gutter) + var(--safe-l));
     background: rgba(6, 8, 16, 0.72);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -415,10 +500,19 @@ body {
     padding: calc(var(--sp-xl) * 1.1) var(--sp-xl);
     box-shadow: var(--shadow-lg), 0 0 60px rgba(123, 111, 245, 0.14);
     text-align: center;
-    width: 92%;
-    max-width: 430px;
+    /* Fluid width, and capped height so that on short/landscape phones the form
+       scrolls inside the card instead of overflowing off-screen. */
+    width: min(26.875rem, calc(100vw - 2 * var(--gutter)));
+    /* Cap to the overlay's inner height (it already subtracts gutter + safe
+       areas via its padding) and let the form scroll inside on short/landscape
+       screens. min-height:0 + flex:0 1 auto are required or the flex item
+       refuses to shrink and the buttons spill off-screen. */
+    max-height: 100%;
+    min-height: 0;
+    flex: 0 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     animation: cardIn 0.6s var(--ease) 0.05s both;
-    overflow: hidden;
 }
 /* animated gradient hairline at the top edge */
 .auth-card::before {
@@ -566,13 +660,18 @@ body {
    perf rule only bans full-screen backdrop blur. */
 #voice-controls {
     position: fixed;
-    bottom: 18px;                 /* docked at the BOTTOM, centered */
+    bottom: calc(0.75rem + var(--safe-b)); /* docked at the BOTTOM, centered */
     left: 50%;
     transform: translateX(-50%);
     z-index: 1100;                /* above the footer bar */
     display: none;                /* shown by JS when in the game scene */
     align-items: center;
     gap: var(--sp-xs);
+    /* Never wider than the screen: wrap to a second row on very narrow phones
+       rather than overflowing off both edges. */
+    max-width: calc(100vw - 2 * var(--gutter));
+    flex-wrap: wrap;
+    justify-content: center;
     /* unified glass dock surface */
     padding: 7px;
     background: rgba(10, 11, 18, 0.65);
@@ -716,14 +815,21 @@ body {
 #unity-footer {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 56px;
+    /* Fluid height + safe-area padding so it clears a home indicator / notch. */
+    min-height: 3.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 var(--sp-lg);
+    padding:
+        0
+        calc(var(--gutter) + var(--safe-r))
+        var(--safe-b)
+        calc(var(--gutter) + var(--safe-l));
     background: linear-gradient(0deg, rgba(7,8,15,0.85), transparent);
     z-index: 1000;
+    pointer-events: none;   /* the gradient shouldn't eat clicks... */
 }
+#unity-footer > * { pointer-events: auto; } /* ...but its buttons still work */
 .unity-mobile #unity-footer { display: none; }
 .footer-left, .footer-right { display: flex; align-items: center; gap: var(--sp-md); }
 
@@ -759,8 +865,8 @@ body {
    The tile DOM/classes are generated by AgoraBridge.jslib — only styled here. */
 #agora-tiles {
     position: fixed;
-    top: var(--sp-lg);
-    right: var(--sp-lg);
+    top: calc(var(--gutter) + var(--safe-t));
+    right: calc(var(--gutter) + var(--safe-r));
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -785,7 +891,12 @@ body {
 }
 #agora-tiles::-webkit-scrollbar-track { background: transparent; }
 .agora-tile {
-    width: 210px; height: 132px;
+    /* Fluid tile: scales with the viewport (never a fixed 210px that dwarfs a
+       phone or looks tiny on a 4K panel). 16:9 derives the height. */
+    width: clamp(7.5rem, 16vw, 13.125rem);
+    aspect-ratio: 16 / 9;
+    height: auto;
+    flex: none;   /* don't let the scrolling column squash tiles */
     /* Glass frame around the video: dark glass backing shows through letterboxed
        edges, with the system's 0.5px hairline + 14px radius so tiles match the
        dock and panels. */
@@ -837,23 +948,52 @@ body {
 .hidden { display: none !important; }
 .fade-out { opacity: 0 !important; }
 
-/* ==================== RESPONSIVE ==================== */
-@media (max-width: 768px) {
-    #voice-controls { bottom: 10px; gap: 6px; }
-    .loading-content { min-width: 0; width: 90%; padding: var(--sp-xl) var(--sp-lg); }
-    .brand-mark { font-size: 2.1rem; }
-    .brand-tagline { font-size: 0.7rem; letter-spacing: 0.22em; }
-    .auth-card { padding: var(--sp-xl) var(--sp-lg); }
-    .auth-title { font-size: 1.6rem; }
-    .voice-text, .cam-text, .screen-text, .chat-text { display: none; } /* icons only on mobile */
+/* ==================== RESPONSIVE ====================
+   The shell is fluid by default (--ui-scale + clamp/min sizing above), so these
+   queries only handle genuine LAYOUT changes — things a fluid scale can't solve
+   on its own — rather than re-specifying sizes at every breakpoint.
+   Ranges covered: narrow phones, short/landscape phones, tablets, and ultrawide.
+====================================================== */
+
+/* ---- Narrow: collapse button labels to icons so the dock always fits ---- */
+@media (max-width: 640px) {
+    .voice-text, .cam-text, .screen-text, .chat-text { display: none; }
     .voice-btn { padding: 0.55rem 0.7rem; }
-    .agora-tile { width: 130px; height: 84px; }
-    .gradient-orb { filter: blur(64px); }
+    .voice-btn svg { padding: 4px; }
+    .gradient-orb { filter: blur(64px); } /* cheaper blur on small/low-end devices */
 }
 
-@media (max-width: 480px) {
-    .brand-mark { font-size: 1.8rem; }
-    #loading-percentage { font-size: 0.95rem; }
+/* ---- Short viewports (landscape phones, small laptops) ----
+   Vertical space is the scarce resource: shrink the tall decorative bits so the
+   loading/auth cards and the canvas still fit without scrolling. */
+@media (max-height: 560px) {
+    .loading-orbit { width: 40px; height: 40px; margin-bottom: var(--sp-sm); }
+    .brand-tagline { margin-bottom: var(--sp-sm); }
+    .loading-content { padding: var(--sp-lg) var(--sp-xl); }
+    .auth-card { padding: var(--sp-lg) var(--sp-xl); }
+    .auth-subtitle { margin-bottom: var(--sp-md); }
+    .auth-divider { margin: var(--sp-sm) 0; }
+    .auth-btn { margin-bottom: var(--sp-sm); }
+}
+
+/* ---- Very short: drop purely decorative elements entirely ---- */
+@media (max-height: 420px) {
+    .loading-orbit { display: none; }
+    .auth-title { margin-bottom: 0; }
+}
+
+/* ---- Ultrawide / very large displays ----
+   Stop the UI from becoming a lost speck: the fluid scale already grows type,
+   but keep the video-tile column from eating the screen. */
+@media (min-width: 2000px) {
+    .agora-tile { width: clamp(13.125rem, 11vw, 17rem); }
+}
+
+/* ---- Coarse pointers (touch): larger hit targets ---- */
+@media (pointer: coarse) {
+    .voice-btn { min-height: 44px; }
+    .control-btn { width: 44px; height: 44px; }
+    .auth-btn { min-height: 44px; }
 }
 
 /* ==================== REDUCED MOTION ==================== */

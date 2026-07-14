@@ -4,7 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- viewport-fit=cover is REQUIRED for env(safe-area-inset-*) to report real
+       values on notched/rounded devices; the CSS uses those insets so the HUD,
+       dock and cards never sit under a notch or home indicator. -->
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>VEONARYLAND</title>
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -307,9 +311,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/edb8ece8e6a8767aaa642626abf47bd2.data.unityweb",
-      frameworkUrl: buildUrl + "/9fcf957fcb9701a201e2017957be065f.framework.js.unityweb",
-      codeUrl: buildUrl + "/c7ed8b0aaf4e9761d661f6b70ab33b4e.wasm.unityweb",
+      dataUrl: buildUrl + "/722c7c4a8f1361494d2e09f3ea117b60.data.unityweb",
+      frameworkUrl: buildUrl + "/61da42ca295eba35c30a63b08309e626.framework.js.unityweb",
+      codeUrl: buildUrl + "/8a7135a70504540264d3608b26e9a923.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
