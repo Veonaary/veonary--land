@@ -626,6 +626,39 @@ body {
     box-shadow: var(--shadow-md);
 }
 
+/* Loading state: covers the gap between click and the overlay hiding (Firebase
+   round-trip) so the button doesn't sit there looking unresponsive. Hides the
+   button's own icon/label in favor of a spinner + "Signing in…", and blocks
+   further clicks/hover motion. */
+.auth-btn.loading {
+    pointer-events: none;
+    transform: none !important;
+    cursor: default;
+}
+.auth-btn.loading > *:not(.auth-btn-spinner) {
+    visibility: hidden;
+}
+.auth-btn-spinner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    margin: -9px 0 0 -9px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+}
+.auth-btn.secondary .auth-btn-spinner {
+    border: 2px solid rgba(123, 111, 245, 0.25);
+    border-top-color: var(--accent-1);
+}
+.auth-btn.loading .auth-btn-spinner {
+    display: block;
+}
+
 .google-icon { width: 20px; height: 20px; }
 
 .auth-toggle-text { margin-top: var(--sp-xs); font-size: 0.88rem; color: var(--text-2); }
@@ -637,6 +670,26 @@ body {
     transition: color 0.2s var(--ease);
 }
 .auth-link:hover { color: var(--accent-3); text-decoration: underline; }
+
+/* Small studio credit under the guest button — quieter than the toggle text
+   above it, just enough to point interested players back to the studio site. */
+.auth-studio-credit {
+    margin-top: var(--sp-md);
+    font-size: 0.78rem;
+    color: var(--text-2);
+    opacity: 0.7;
+    text-align: center;
+}
+.auth-studio-credit a {
+    color: var(--text-2);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s var(--ease);
+}
+.auth-studio-credit a:hover {
+    color: var(--accent-2);
+    text-decoration: underline;
+}
 
 .auth-divider {
     display: flex;

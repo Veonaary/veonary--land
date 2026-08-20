@@ -75,6 +75,7 @@
             <polyline points="22,6 12,13 2,6"></polyline>
           </svg>
           <span id="emailAuthBtnText">Sign In</span>
+          <span class="auth-btn-spinner"></span>
         </button>
 
         <!-- Toggle between Sign In and Sign Up -->
@@ -105,7 +106,8 @@
             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             fill="#EA4335" />
         </svg>
-        Sign in with Google
+        <span>Sign in with Google</span>
+        <span class="auth-btn-spinner"></span>
       </button>
 
       <!-- Guest Sign In -->
@@ -114,8 +116,13 @@
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
-        Play as Guest
+        <span>Play as Guest</span>
+        <span class="auth-btn-spinner"></span>
       </button>
+
+      <p class="auth-studio-credit">
+        A game by <a href="https://www.veonarystudios.com" target="_blank" rel="noopener noreferrer">www.veonarystudios.com</a>
+      </p>
     </div>
   </div>
 
@@ -171,7 +178,8 @@
 
   <!-- Voice Chat Controls -->
   <div id="voice-controls" class="glass-panel">
-    <button id="voiceBtn" class="voice-btn" title="Enable Voice Chat">
+    <button id="voiceBtn" class="voice-btn" title="Toggle Voice Chat (O)">
+      <span class="key-hint">O</span>
       <svg class="mic-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="2">
         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
@@ -182,7 +190,8 @@
       <span class="voice-text">Enable Voice</span>
     </button>
 
-    <button id="cameraBtn" class="voice-btn" title="Toggle Camera">
+    <button id="cameraBtn" class="voice-btn" title="Toggle Camera (P)">
+      <span class="key-hint">P</span>
       <svg class="cam-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="2">
         <polygon points="23 7 16 12 23 17 23 7" />
@@ -311,9 +320,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/c37064820dc83b1c3c3909a4476456d6.data.unityweb",
-      frameworkUrl: buildUrl + "/dc1d7c790023294732e251a2c9255a4d.framework.js.unityweb",
-      codeUrl: buildUrl + "/bb8eb02b9706514a84237570d4453c48.wasm.unityweb",
+      dataUrl: buildUrl + "/c0add8c4f0e198a5fed96f2e885c0408.data.unityweb",
+      frameworkUrl: buildUrl + "/a17aade223e267d49e55d4499dd16a60.framework.js.unityweb",
+      codeUrl: buildUrl + "/1fed0d18c23c380b5d5908df0f13bb08.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
@@ -453,6 +462,34 @@
         }
         console.log("[Camera] Button toggled:", camOn);
       };
+    })();
+  </script>
+
+  <!-- Keyboard Shortcuts: O = Voice, P = Camera. Mirrors the 'T' chat toggle
+       so the mouse never has to leave pointer-lock to click these buttons. -->
+  <script>
+    (function () {
+      function isTypingInPage() {
+        if (window.__chatInputActive) return true; // Unity chat text field has focus
+        const el = document.activeElement;
+        if (!el) return false;
+        const tag = el.tagName;
+        return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable;
+      }
+
+      window.addEventListener('keydown', function (e) {
+        if (e.repeat) return;
+        if (isTypingInPage()) return; // never hijack auth form / other text fields
+
+        const key = e.key.toLowerCase();
+        if (key === 'o') {
+          const voiceBtn = document.getElementById('voiceBtn');
+          if (voiceBtn) voiceBtn.click();
+        } else if (key === 'p') {
+          const camBtn = document.getElementById('cameraBtn');
+          if (camBtn) camBtn.click();
+        }
+      });
     })();
   </script>
 
@@ -691,6 +728,8 @@
 
       if (window.__authInProgress) { console.log('[Auth] Sign-in already in progress — ignoring extra click'); return; }
       window.__authInProgress = true;
+      const emailBtn = document.getElementById('emailAuthBtn');
+      emailBtn.classList.add('loading');
 
       if (isSignUpMode) {
         // Sign Up
@@ -702,6 +741,7 @@
           })
           .catch(function (error) {
             window.__authInProgress = false;
+            emailBtn.classList.remove('loading');
             console.error('[Auth] Sign up failed:', error);
             alert('Sign up failed: ' + error.message);
           });
@@ -715,6 +755,7 @@
           })
           .catch(function (error) {
             window.__authInProgress = false;
+            emailBtn.classList.remove('loading');
             console.error('[Auth] Email sign-in failed:', error);
             alert('Sign in failed: ' + error.message);
           });
@@ -725,6 +766,8 @@
     document.getElementById('googleSignInBtn').onclick = function () {
       if (window.__authInProgress) { console.log('[Auth] Sign-in already in progress — ignoring extra click'); return; }
       window.__authInProgress = true;
+      const googleBtn = document.getElementById('googleSignInBtn');
+      googleBtn.classList.add('loading');
 
       console.log('[Auth] Google Sign In clicked');
 
@@ -734,6 +777,7 @@
         processUserAndSend(result.user);
       }).catch(function (error) {
         window.__authInProgress = false;
+        googleBtn.classList.remove('loading');
         console.error('[Auth] Google sign-in failed:', error);
         alert('Sign in failed: ' + error.message);
       });
@@ -746,6 +790,8 @@
       // would re-send OnLoginSuccess and re-connect Photon).
       if (window.__authInProgress) { console.log('[Auth] Sign-in already in progress — ignoring extra click'); return; }
       window.__authInProgress = true;
+      const guestBtn = document.getElementById('guestSignInBtn');
+      guestBtn.classList.add('loading');
 
       console.log('[Auth] Guest Sign In clicked');
 
@@ -754,6 +800,7 @@
         processUserAndSend(result.user);
       }).catch(function (error) {
         window.__authInProgress = false; // allow retry on failure
+        guestBtn.classList.remove('loading');
         console.error('[Auth] Guest sign-in failed:', error);
         alert('Sign in failed: ' + error.message);
       });
