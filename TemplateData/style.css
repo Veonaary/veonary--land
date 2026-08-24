@@ -737,6 +737,21 @@ body {
 #voice-controls.visible { display: flex; animation: dockIn 0.45s var(--ease); }
 @keyframes dockIn { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
+/* Mobile: the on-screen joystick occupies the bottom-left of the canvas (see
+   MobileControlsUIGenerator — anchored bottom-left, ~300px square), so a
+   bottom-center dock can sit right on top of it on narrow phones. Move the
+   dock to the top instead, clear of both the joystick and the touch-look
+   drag area, and out of the way of the floating fullscreen button (top-right). */
+.unity-mobile #voice-controls {
+    bottom: auto;
+    top: calc(var(--gutter) + var(--safe-t));
+    left: calc(var(--gutter) + var(--safe-l));
+    transform: none;
+    max-width: calc(100vw - 2 * var(--gutter) - 3rem); /* leave room for the fullscreen button */
+}
+.unity-mobile #voice-controls.visible { animation: dockInMobile 0.45s var(--ease); }
+@keyframes dockInMobile { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+
 .glass-panel {
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
@@ -883,8 +898,25 @@ body {
     pointer-events: none;   /* the gradient shouldn't eat clicks... */
 }
 #unity-footer > * { pointer-events: auto; } /* ...but its buttons still work */
-.unity-mobile #unity-footer { display: none; }
 .footer-left, .footer-right { display: flex; align-items: center; gap: var(--sp-md); }
+
+/* Mobile: no room for the full footer bar (bottom is already the joystick/dock
+   area), but players still need a way into fullscreen — browser chrome eats a
+   lot of a phone screen otherwise. Hide the build-title half, keep only the
+   fullscreen button, and float it top-right (clear of the bottom-center voice
+   dock and the bottom-left on-screen joystick). */
+.unity-mobile #unity-footer {
+    bottom: auto;
+    top: calc(var(--gutter) + var(--safe-t));
+    right: calc(var(--gutter) + var(--safe-r));
+    left: auto;
+    padding: 0;
+    background: none;
+    min-height: 0;
+    width: auto;
+    z-index: 1100;
+}
+.unity-mobile .footer-left { display: none; }
 
 #unity-build-title { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.03em; }
 #unity-build-title .brand-veonary {
