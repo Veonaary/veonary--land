@@ -320,9 +320,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/df1c482da8c28688d9f2e5863b10b7de.data.unityweb",
-      frameworkUrl: buildUrl + "/634d4abc9c35b6fcf5734c36fe4b77bd.framework.js.unityweb",
-      codeUrl: buildUrl + "/4f04c52fe80adad9bd69551876760f9e.wasm.unityweb",
+      dataUrl: buildUrl + "/2dbdfeaa622097ab3fc7024f24d9bdeb.data.unityweb",
+      frameworkUrl: buildUrl + "/cd238fcd097c6dd2236d73c50c2e075b.framework.js.unityweb",
+      codeUrl: buildUrl + "/d61fc6bcf08bfbfaa69f64d9dec6a874.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
@@ -563,9 +563,13 @@
 
   <!-- Responsive Handler -->
   <script>
+    function isMobileLayout() {
+      return window.innerWidth <= 768;
+    }
+
     function handleResize() {
       const container = document.getElementById('unity-container');
-      if (window.innerWidth <= 768) {
+      if (isMobileLayout()) {
         container.classList.remove('unity-desktop');
         container.classList.add('unity-mobile');
       } else {
@@ -576,6 +580,51 @@
 
     window.addEventListener('resize', handleResize);
     handleResize();
+  </script>
+
+  <!-- Mobile: hide the browser URL bar as soon as the experience starts.
+       There's no direct API to hide browser chrome, but requesting Fullscreen
+       on the FIRST user gesture reliably does it on Android Chrome and most
+       mobile browsers (iOS Safari doesn't support element Fullscreen at all —
+       there it's a no-op and the page just falls back to normal scroll-to-hide
+       behavior). Must run on a real click/touch event (gesture-gated, same
+       restriction as Pointer Lock), so it's wired to the auth buttons — the
+       first tap almost every mobile player makes. -->
+  <script>
+    (function () {
+      let attempted = false;
+
+      function requestMobileFullscreen() {
+        if (attempted || !isMobileLayout()) return;
+        attempted = true;
+
+        var el = document.documentElement;
+        var request = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+        if (request) {
+          request.call(el).catch(function (err) {
+            console.log('[Fullscreen] request failed/declined:', err && err.message);
+          });
+        }
+      }
+
+      // Also opportunistically try a scroll-to-hide nudge (harmless no-op on
+      // browsers that don't need it, helps on older Android WebViews that
+      // collapse the URL bar on scroll rather than via Fullscreen).
+      function nudgeScroll() {
+        if (!isMobileLayout()) return;
+        window.scrollTo(0, 1);
+      }
+
+      ['emailAuthBtn', 'googleSignInBtn', 'guestSignInBtn'].forEach(function (id) {
+        var btn = document.getElementById(id);
+        if (btn) btn.addEventListener('click', function () {
+          requestMobileFullscreen();
+          nudgeScroll();
+        }, { once: true });
+      });
+
+      window.addEventListener('load', nudgeScroll);
+    })();
   </script>
 
   <!-- Authentication Handlers -->

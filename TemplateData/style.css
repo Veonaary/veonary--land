@@ -212,10 +212,16 @@ body {
     --pad-l: calc(var(--gutter) + var(--safe-l));
 }
 #unity-container.unity-mobile {
-    --pad-t: calc(clamp(0.25rem, 2vh, 3.5rem) + var(--safe-t));
-    --pad-r: calc(0.25rem + var(--safe-r));
-    --pad-b: calc(clamp(3rem, 9vh, 4rem) + var(--safe-b));
-    --pad-l: calc(0.25rem + var(--safe-l));
+    /* Minimal padding on every edge: the voice dock lives top-left and the
+       fullscreen button top-right (both float over the canvas, see
+       #unity-footer/#voice-controls .unity-mobile rules below), and the
+       joystick/touch-look controls are inside the Unity canvas itself, not
+       HTML — so there's no HTML chrome left that needs room reserved for it.
+       Only the safe-area insets are kept, for notches/home indicators. */
+    --pad-t: var(--safe-t);
+    --pad-r: var(--safe-r);
+    --pad-b: var(--safe-b);
+    --pad-l: var(--safe-l);
 }
 #unity-container.unity-desktop,
 #unity-container.unity-mobile {
@@ -271,7 +277,23 @@ body {
     max-height: 100%;
     object-fit: contain;
 }
-.unity-mobile #unity-canvas { border-radius: var(--r-md); }
+.unity-mobile #unity-canvas {
+    /* A strict 16:9 box on a tall phone letterboxes hard top/bottom (a
+       390x844 phone only gets ~218px of vertical canvas at 16:9), wasting
+       most of the screen. Mobile drops the aspect-ratio lock entirely and
+       fills the whole padded box on BOTH axes instead — the world view (and
+       the joystick/touch-look canvas, which is screen-space and always
+       full-viewport regardless) simply gets whatever aspect the phone has. */
+    aspect-ratio: unset;
+    width: var(--avail-w) !important;
+    height: var(--avail-h) !important;
+    /* Full-bleed to the screen edges (padding is just safe-area now) reads
+       oddly with the desktop "floating window" framing — drop the rounding/
+       border/glow so it looks like a real full-screen app, not a card. */
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+}
 
 /* ==================== LOADING SCREEN ==================== */
 #unity-loading-bar {
@@ -975,6 +997,13 @@ body {
     border-radius: var(--r-full);
 }
 #agora-tiles::-webkit-scrollbar-track { background: transparent; }
+/* Mobile: the fullscreen button now floats top-right too (see #unity-footer
+   .unity-mobile above) — push the tile stack down to clear it instead of
+   stacking directly on top. */
+.unity-mobile #agora-tiles {
+    top: calc(var(--gutter) + var(--safe-t) + 3rem);
+    max-height: calc(80vh - 3rem);
+}
 .agora-tile {
     /* Fluid tile: scales with the viewport (never a fixed 210px that dwarfs a
        phone or looks tiny on a 4K panel). 16:9 derives the height. */
