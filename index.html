@@ -59,6 +59,24 @@
     <div class="vignette"></div>
   </div>
 
+  <!-- Rotate-device prompt: shown on mobile whenever the phone is in portrait.
+       The game (lobby cards, HUD dock, world view) is laid out for
+       landscape, not a page that reflows for portrait. screen.orientation.lock
+       (requested after fullscreen, see the script near the bottom) silently
+       fails or is unsupported on many browsers (all of iOS Safari, and
+       Android unless fullscreen+permission cooperate) — this overlay is the
+       reliable fallback that works everywhere, on top of it. -->
+  <div id="rotate-prompt" class="rotate-prompt">
+    <div class="rotate-icon">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="7" y="2" width="10" height="16" rx="2" transform="rotate(90 12 10)"></rect>
+        <path d="M12 2v1.2M12 20.8V22" stroke-linecap="round"></path>
+      </svg>
+    </div>
+    <p class="rotate-title">Rotate your device</p>
+    <p class="rotate-subtitle">VeonaryLand is best played in landscape</p>
+  </div>
+
   <!-- Authentication Overlay -->
   <div id="auth-overlay" class="auth-overlay">
     <div class="auth-card">
@@ -320,9 +338,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/2dbdfeaa622097ab3fc7024f24d9bdeb.data.unityweb",
-      frameworkUrl: buildUrl + "/cd238fcd097c6dd2236d73c50c2e075b.framework.js.unityweb",
-      codeUrl: buildUrl + "/d61fc6bcf08bfbfaa69f64d9dec6a874.wasm.unityweb",
+      dataUrl: buildUrl + "/eba5197292129125a5395302cbc86f80.data.unityweb",
+      frameworkUrl: buildUrl + "/2f62bab24e26c31f12fd1f70a276d539.framework.js.unityweb",
+      codeUrl: buildUrl + "/207cc1cdcafd209a99826c507fb9a63f.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
@@ -582,6 +600,33 @@
     handleResize();
   </script>
 
+  <!-- Rotate-device prompt: show/hide based on actual orientation (not just
+       narrow width — a landscape phone is still "mobile" but shouldn't be
+       told to rotate). Only applies on mobile-sized viewports; a narrow
+       desktop browser window in "portrait" proportions isn't asked to
+       rotate a monitor. Re-checked on resize/orientationchange so it reacts
+       immediately as the player turns the device, and again whenever
+       fullscreen state changes (entering/exiting fullscreen on some mobile
+       browsers momentarily changes the reported viewport). -->
+  <script>
+    function isPortraitPhone() {
+      return isMobileLayout() && window.innerHeight > window.innerWidth;
+    }
+
+    function updateRotatePrompt() {
+      var prompt = document.getElementById('rotate-prompt');
+      if (!prompt) return;
+      prompt.classList.toggle('visible', isPortraitPhone());
+    }
+    window.__updateRotatePrompt = updateRotatePrompt;
+
+    window.addEventListener('resize', updateRotatePrompt);
+    window.addEventListener('orientationchange', updateRotatePrompt);
+    document.addEventListener('fullscreenchange', updateRotatePrompt);
+    document.addEventListener('webkitfullscreenchange', updateRotatePrompt);
+    updateRotatePrompt();
+  </script>
+
   <!-- Mobile: hide the browser URL bar as soon as the experience starts.
        There's no direct API to hide browser chrome, but requesting Fullscreen
        on the FIRST user gesture reliably does it on Android Chrome and most
@@ -601,9 +646,23 @@
         var el = document.documentElement;
         var request = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
         if (request) {
-          request.call(el).catch(function (err) {
-            console.log('[Fullscreen] request failed/declined:', err && err.message);
-          });
+          request.call(el)
+            .then(function () {
+              // The Screen Orientation API's lock() only works while the page
+              // is fullscreen (and only on browsers that implement it at all —
+              // notably NOT iOS Safari, which has no lock API whatsoever). So
+              // this is attempted right after fullscreen succeeds; wherever it
+              // isn't supported or is denied, window.__updateRotatePrompt (set
+              // up below) falls back to just asking the player to rotate.
+              if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(function (err) {
+                  console.log('[Orientation] lock failed/unsupported:', err && err.message);
+                });
+              }
+            })
+            .catch(function (err) {
+              console.log('[Fullscreen] request failed/declined:', err && err.message);
+            });
         }
       }
 

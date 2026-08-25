@@ -295,6 +295,25 @@ body {
     box-shadow: none;
 }
 
+/* Real browser Fullscreen (unityInstance.SetFullscreen(1), or the OS-level
+   Fullscreen API triggered by the mobile-URL-bar-hide script) must win over
+   EVERY sizing rule above, including the !important ones — otherwise the
+   fixed --avail-w/h (or the 16:9 desktop box) keeps the canvas pinned to its
+   windowed size even while the browser genuinely goes fullscreen. :fullscreen
+   applies to whichever element the Fullscreen API was requested on; Unity
+   requests it on the canvas itself, so target that directly. */
+#unity-canvas:fullscreen,
+#unity-canvas:-webkit-full-screen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    aspect-ratio: unset !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none;
+}
+
 /* ==================== LOADING SCREEN ==================== */
 #unity-loading-bar {
     position: fixed;
@@ -1057,6 +1076,48 @@ body {
     max-width: 90%;
 }
 #unity-warning > div { padding: var(--sp-sm); border-radius: var(--r-sm); margin-bottom: var(--sp-sm); }
+
+/* ==================== ROTATE-DEVICE PROMPT ==================== */
+/* Blocks the ENTIRE app (above the auth overlay and loading screen — the
+   layout underneath is landscape-only and unusable in portrait, so nothing
+   should be reachable until the phone is turned). Shown/hidden by JS based on
+   actual orientation, not just viewport width. */
+.rotate-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 9998; /* just under the loading card's 9999, above everything else */
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-sm);
+    padding: var(--gutter);
+    text-align: center;
+    background: var(--bg-0);
+}
+.rotate-prompt.visible { display: flex; animation: fadeIn 0.3s var(--ease); }
+.rotate-icon {
+    color: var(--accent-2);
+    margin-bottom: var(--sp-sm);
+    animation: rotateHint 1.8s ease-in-out infinite;
+}
+@keyframes rotateHint {
+    0%, 100% { transform: rotate(0deg); }
+    50%      { transform: rotate(90deg); }
+}
+.rotate-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-1);
+}
+.rotate-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-2);
+    font-weight: 500;
+}
+@media (prefers-reduced-motion: reduce) {
+    .rotate-icon { animation: none; }
+}
 
 /* ==================== UTILITY ==================== */
 .hidden { display: none !important; }
