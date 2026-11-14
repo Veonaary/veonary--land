@@ -238,6 +238,18 @@
       <span class="screen-text">Share Screen</span>
     </button>
 
+    <!-- Enter VR: hidden until the WebXR plugin reports this device can run
+         immersive VR (e.g. Meta Quest Browser). -->
+    <button id="vrBtn" class="voice-btn" title="Enter VR" style="display:none;">
+      <svg class="vr-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-4l-2-3h-2l-2 3H5a2 2 0 0 1-2-2z" />
+        <circle cx="8" cy="11.5" r="1.5" />
+        <circle cx="16" cy="11.5" r="1.5" />
+      </svg>
+      <span class="vr-text">Enter VR</span>
+    </button>
+
     <div class="voice-indicator" id="voiceIndicator">
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
@@ -338,9 +350,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/fc254b2f3b0676b35006a442b1900db5.data.unityweb",
-      frameworkUrl: buildUrl + "/782d766c17c50bcdf3f6f947497caee3.framework.js.unityweb",
-      codeUrl: buildUrl + "/9e75ed23dafaea9dac23dc6c2f9272fd.wasm.unityweb",
+      dataUrl: buildUrl + "/cf0f057337e9d3dfd35dc889d070171a.data.unityweb",
+      frameworkUrl: buildUrl + "/6be5acef8134b484699fa0fb10665431.framework.js.unityweb",
+      codeUrl: buildUrl + "/83f2aecb5162c66003841cf84f368f21.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
@@ -575,6 +587,31 @@
           screenBtn.querySelector('.screen-text').textContent = "Share Screen";
         }
         console.log("[Screen] Button toggled:", sharing);
+      };
+    })();
+  </script>
+
+  <!-- Enter VR Button Handler. The WebXR Export plugin (webxr.jspre, built
+       into the Unity framework) checks headset support itself and fires
+       'onVRSupportedCheck'; the button only appears when it's supported. -->
+  <script>
+    (function () {
+      const vrBtn = document.getElementById("vrBtn");
+      if (!vrBtn) return;
+
+      document.addEventListener('onVRSupportedCheck', function (event) {
+        const supported = !!(event.detail && event.detail.supported);
+        vrBtn.style.display = supported ? '' : 'none';
+        console.log("[VR] Immersive VR supported:", supported);
+      }, false);
+
+      vrBtn.onclick = function () {
+        if (!window.unityInstance || !window.unityInstance.Module || !window.unityInstance.Module.WebXR) {
+          console.warn("[VR] WebXR plugin not loaded in this build.");
+          return;
+        }
+        unlockAudioContext(); // keep remote voices playing once inside VR
+        window.unityInstance.Module.WebXR.toggleVR();
       };
     })();
   </script>
