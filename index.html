@@ -15,6 +15,34 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="TemplateData/style.css">
+
+  <!-- VR QA only: opt-in headset emulator (Meta's IWER) for testing WebXR on a
+       desktop browser. Loads ONLY when the URL has ?xr-emulator=1 — normal
+       visitors never download it. Add &xr-devui=0 to skip the emulator's
+       on-screen controls panel. Unity waits for it (window.__xrEmulatorReady)
+       so the WebXR plugin sees the emulated headset when it starts. -->
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      if (params.get('xr-emulator') !== '1') return;
+      var IWER_URL = 'https://cdn.jsdelivr.net/npm/iwer@2.8.0/+esm';
+      var DEVUI_URL = 'https://cdn.jsdelivr.net/npm/@iwer/devui@2.8.0/+esm';
+      window.__xrEmulatorReady = import(IWER_URL).then(function (IWER) {
+        var device = new IWER.XRDevice(IWER.metaQuest2);
+        // Desktop Chrome has its own (headset-less) WebXR, so force IWER over it.
+        device.installRuntime({ forceInstall: true });
+        window.__xrDevice = device;
+        console.log('[XR-Emu] IWER ' + device.name + ' runtime installed.');
+        if (params.get('xr-devui') === '0') return;
+        return import(DEVUI_URL).then(function (D) {
+          window.__xrDevUI = new D.DevUI(device);
+          console.log('[XR-Emu] DevUI ready.');
+        }).catch(function (e) { console.warn('[XR-Emu] DevUI failed to load:', e); });
+      }).catch(function (e) {
+        console.error('[XR-Emu] Emulator failed to load; continuing without it.', e);
+      });
+    })();
+  </script>
 </head>
 
 <body>
@@ -350,9 +378,9 @@
     var loaderUrl = buildUrl + "/cee3bfd5589651a8b16e2a12b8abe5b3.loader.js";
 
     var config = {
-      dataUrl: buildUrl + "/cf0f057337e9d3dfd35dc889d070171a.data.unityweb",
-      frameworkUrl: buildUrl + "/6be5acef8134b484699fa0fb10665431.framework.js.unityweb",
-      codeUrl: buildUrl + "/83f2aecb5162c66003841cf84f368f21.wasm.unityweb",
+      dataUrl: buildUrl + "/5f26e691bd5d21dfeda6d20bef0efa1c.data.unityweb",
+      frameworkUrl: buildUrl + "/c247080f414db0f3d6317aa0fddce029.framework.js.unityweb",
+      codeUrl: buildUrl + "/8806ed60fa1e55ddc9efb8f3d2f14a27.wasm.unityweb",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
     productName: "WebProject",
@@ -413,7 +441,10 @@
       });
     };
 
-    document.body.appendChild(script);
+    // Normally starts at once; with ?xr-emulator=1 it waits for the emulator.
+    (window.__xrEmulatorReady || Promise.resolve()).then(function () {
+      document.body.appendChild(script);
+    });
   </script>
 
   <!-- Voice Button Handler -->
@@ -611,8 +642,49 @@
           return;
         }
         unlockAudioContext(); // keep remote voices playing once inside VR
+        installFoveationHook();
         window.unityInstance.Module.WebXR.toggleVR();
       };
+
+      // Fixed foveated rendering: the headset draws the edges of each eye at
+      // lower resolution (0 = off, 1 = max). Only touches VR sessions.
+      var VR_FOVEATION = 1.0;
+      function installFoveationHook() {
+        var S = window.XRSession;
+        if (!S || !S.prototype || S.prototype.__veonaryFoveation) return;
+        var original = S.prototype.updateRenderState;
+        S.prototype.updateRenderState = function (state) {
+          var result = original.apply(this, arguments);
+          try {
+            var layer = state && state.baseLayer;
+            if (layer && 'fixedFoveation' in layer) {
+              layer.fixedFoveation = VR_FOVEATION;
+              console.log('[VR] Fixed foveation set to', layer.fixedFoveation);
+            }
+          } catch (e) { console.warn('[VR] Foveation not applied:', e); }
+          return result;
+        };
+        S.prototype.__veonaryFoveation = true;
+      }
+      installFoveationHook();
+      if (window.__xrEmulatorReady) window.__xrEmulatorReady.then(installFoveationHook);
+
+      // Headsets (Quest, Pico) have no webcam: hide the own-camera button there.
+      // Desktop and phones are unaffected.
+      var isHeadset = /OculusBrowser|Quest|Pico|Wolvic/.test(navigator.userAgent || "");
+      if (isHeadset) {
+        var camBtn = document.getElementById("cameraBtn");
+        if (camBtn) camBtn.style.display = "none";
+      }
+
+      // Unity tells the page when an immersive session starts/ends; the own-
+      // camera button is hidden for the session (and stays hidden on headsets).
+      document.addEventListener('veonary-vr', function (e) {
+        var inVR = !!(e.detail && e.detail.inVR);
+        console.log("[VR] In VR:", inVR);
+        var camBtn = document.getElementById("cameraBtn");
+        if (camBtn) camBtn.style.display = (inVR || isHeadset) ? "none" : "";
+      });
     })();
   </script>
 
